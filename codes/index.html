@@ -1,0 +1,2577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校园搭子广场 - MVP 1.0</title>
+<style>
+/* ===== 基础样式 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6fa; max-width: 430px; margin: 0 auto;
+    min-height: 100vh; position: relative; overflow-x: hidden;
+}
+.page { display: none; min-height: 100vh; padding-bottom: 80px; }
+.page.active { display: block; }
+.toast {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8); color: white; padding: 14px 26px;
+    border-radius: 10px; font-size: 14px; z-index: 9999;
+    display: none; max-width: 80%; text-align: center;
+}
+
+/* ===== 1. 欢迎页 ===== */
+.welcome-page {
+    background: linear-gradient(160deg, #667eea 0%, #764ba2 60%, #a55eea 100%);
+    color: white; min-height: 100vh;
+}
+.welcome-page.active { display: flex; flex-direction: column; justify-content: space-between; }
+.welcome-top { text-align: center; padding: 100px 30px 30px; }
+.welcome-logo {
+    width: 100px; height: 100px; margin: 0 auto 25px;
+    border-radius: 28px; background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center; font-size: 50px;
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+}
+.welcome-title { font-size: 28px; font-weight: 700; margin-bottom: 10px; }
+.welcome-subtitle { font-size: 13px; opacity: 0.92; line-height: 1.7; }
+.welcome-features {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    padding: 10px 30px;
+}
+.feature-card {
+    background: rgba(255,255,255,0.15); padding: 14px;
+    border-radius: 14px; backdrop-filter: blur(8px);
+}
+.feature-icon { font-size: 22px; margin-bottom: 4px; }
+.feature-text { font-size: 12px; }
+.welcome-bottom { padding: 25px 25px 50px; }
+.btn-primary {
+    width: 100%; padding: 16px; background: white; color: #667eea;
+    border: none; border-radius: 28px; font-size: 16px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.welcome-tips {
+    text-align: center; font-size: 11px; opacity: 0.75;
+    margin-top: 14px; line-height: 1.6;
+}
+
+/* ===== 表单页通用 ===== */
+.form-header {
+    background: white; padding: 50px 20px 25px; border-bottom: 1px solid #eee;
+}
+.back-btn {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: #333; margin-bottom: 15px; padding: 0;
+}
+.form-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+.form-desc { font-size: 13px; color: #888; line-height: 1.5; }
+.form-section {
+    background: white; margin: 12px 15px; padding: 18px;
+    border-radius: 16px;
+}
+.form-label {
+    font-size: 13px; color: #555; margin-bottom: 10px;
+    font-weight: 600; display: block;
+}
+.form-label .required { color: #ff4d4f; margin-left: 3px; }
+input.form-input, textarea.form-input {
+    width: 100%; padding: 13px 15px; border: 1.5px solid #e5e5e5;
+    border-radius: 12px; font-size: 14px; outline: none; background: #fafafa;
+    color: #333; font-family: inherit;
+}
+input.form-input:focus, textarea.form-input:focus {
+    border-color: #667eea; background: white;
+}
+.form-tip { font-size: 11px; color: #999; margin-top: 8px; line-height: 1.6; }
+.submit-btn {
+    margin: 25px 20px; padding: 16px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border: none; border-radius: 28px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+    width: calc(100% - 40px);
+}
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.avatar-picker { display: flex; justify-content: center; margin: 5px 0; }
+.avatar-circle {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 30px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.gender-options { display: flex; gap: 10px; }
+.gender-option {
+    flex: 1; padding: 13px; text-align: center; border: 1.5px solid #e5e5e5;
+    border-radius: 12px; cursor: pointer; background: #fafafa;
+    font-size: 14px; color: #666;
+}
+.gender-option.selected {
+    border-color: #667eea; background: #f0f2ff; color: #667eea; font-weight: 600;
+}
+.tag-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-option {
+    padding: 7px 14px; border: 1.5px solid #e5e5e5; border-radius: 16px;
+    cursor: pointer; background: #fafafa; font-size: 12px; color: #666;
+}
+.tag-option.selected {
+    border-color: #667eea; background: #f0f2ff; color: #667eea; font-weight: 600;
+}
+
+.auth-info-box {
+    background: linear-gradient(135deg, #fff7e6, #fff0d6);
+    padding: 14px; border-radius: 12px; margin: 12px 15px;
+    display: flex; gap: 12px; align-items: flex-start;
+}
+.auth-info-box.green { background: linear-gradient(135deg, #f6ffed, #e8ffd8); }
+.auth-info-icon { font-size: 22px; }
+.auth-info-text { font-size: 12px; color: #ad6800; line-height: 1.7; }
+.auth-info-box.green .auth-info-text { color: #237804; }
+
+.upload-box {
+    border: 2px dashed #d9d9d9; border-radius: 12px; padding: 28px 15px;
+    text-align: center; cursor: pointer; background: #fafafa;
+}
+.upload-icon { font-size: 32px; margin-bottom: 6px; }
+.upload-text { font-size: 13px; color: #666; margin-bottom: 3px; }
+.upload-sub { font-size: 11px; color: #999; }
+.upload-preview {
+    width: 100%; height: 140px;
+    background: linear-gradient(135deg, #e8f4fd, #f0f2ff);
+    border-radius: 12px; display: flex; align-items: center;
+    justify-content: center; color: #52c41a; font-size: 48px;
+}
+
+/* ===== 审核中页 ===== */
+.pending-container {
+    padding: 80px 30px 20px; text-align: center;
+}
+.pending-icon {
+    width: 90px; height: 90px; margin: 0 auto 25px;
+    background: linear-gradient(135deg, #ffd666, #ffa940);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 44px;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.pending-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+.pending-desc { font-size: 14px; color: #666; line-height: 1.7; margin-bottom: 25px; }
+.pending-info { background: white; padding: 18px 20px; border-radius: 16px; text-align: left; margin: 0 15px 15px; }
+.pending-info-item {
+    display: flex; justify-content: space-between; padding: 9px 0;
+    font-size: 13px;
+}
+.pending-info-item + .pending-info-item { border-top: 1px solid #f0f0f0; }
+.pending-info-label { color: #888; }
+.pending-info-value { color: #333; font-weight: 500; }
+.status-badge {
+    padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
+}
+.status-badge.pending { background: #fff7e6; color: #fa8c16; }
+.status-badge.approved { background: #f6ffed; color: #52c41a; }
+.status-badge.rejected { background: #fff1f0; color: #ff4d4f; }
+
+/* ===== 子页面通用 ===== */
+.sub-page-header {
+    background: white;
+    padding: 50px 15px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.back-btn-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f5f5f5;
+    border: none;
+    font-size: 22px;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 300;
+}
+.sub-page-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+.primary-btn-sm {
+    margin-top: 20px;
+    padding: 10px 26px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 22px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+}
+.danger-btn {
+    margin: 0;
+    padding: 16px;
+    background: #fff;
+    color: #ff4d4f;
+    border: 1.5px solid #ff4d4f;
+    border-radius: 28px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* ===== 标签栏(我的申请) ===== */
+.tab-bar {
+    display: flex;
+    background: white;
+    padding: 0 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.tab-item {
+    flex: 1;
+    text-align: center;
+    padding: 16px 0;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    font-weight: 500;
+}
+.tab-item.active {
+    color: #667eea;
+    font-weight: 700;
+}
+.tab-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 3px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 2px;
+}
+
+/* ===== 提示卡片 ===== */
+.tip-card {
+    background: linear-gradient(135deg, #fff7e6, #ffe7cc);
+    margin: 15px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+/* ===== 信息区(认证详情/设置) ===== */
+.info-section {
+    background: white;
+    margin: 12px 15px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+.info-section-title {
+    padding: 18px 18px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #667eea;
+}
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-top: 1px solid #f5f5f5;
+    font-size: 14px;
+}
+.info-label {
+    color: #555;
+    font-weight: 500;
+}
+.info-value {
+    color: #999;
+    font-size: 13px;
+}
+.info-value.clickable {
+    cursor: pointer;
+    color: #667eea;
+    font-weight: 500;
+}
+
+/* ===== 认证状态卡片 ===== */
+.auth-status-card {
+    margin: 20px 15px;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 18px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35);
+}
+.auth-status-card.approved {
+    background: linear-gradient(135deg, #52c41a, #389e0d);
+    box-shadow: 0 8px 24px rgba(82, 196, 26, 0.35);
+}
+.auth-status-card.rejected {
+    background: linear-gradient(135deg, #ff4d4f, #cf1322);
+    box-shadow: 0 8px 24px rgba(255, 77, 79, 0.35);
+}
+.auth-status-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+.auth-status-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.auth-status-desc {
+    font-size: 13px;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+/* ===== 广场页 ===== */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 50px 20px 20px; position: sticky; top: 0; z-index: 100;
+}
+.header-title { font-size: 22px; font-weight: 700; margin-bottom: 15px; }
+.search-bar {
+    display: flex; align-items: center; background: rgba(255,255,255,0.2);
+    border-radius: 25px; padding: 11px 18px; backdrop-filter: blur(10px);
+}
+.search-icon { font-size: 16px; margin-right: 10px; }
+.search-input {
+    flex: 1; background: transparent; border: none; color: white;
+    font-size: 14px; outline: none;
+}
+.search-input::placeholder { color: rgba(255,255,255,0.7); }
+
+.category-bar {
+    display: flex; gap: 8px; padding: 13px 15px; overflow-x: auto;
+    background: white; position: sticky; top: 112px; z-index: 99;
+}
+.category-tag {
+    padding: 7px 18px; border-radius: 20px; font-size: 12px;
+    white-space: nowrap; cursor: pointer; transition: all 0.3s;
+    background: #f0f2ff; color: #667eea; border: none; font-weight: 500;
+}
+.category-tag.active {
+    background: linear-gradient(135deg, #667eea, #764ba2); color: white;
+}
+
+.post-list { padding: 15px; }
+.post-card {
+    background: white; border-radius: 16px; padding: 18px; margin-bottom: 15px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.post-header { display: flex; align-items: center; margin-bottom: 12px; }
+.avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 17px; font-weight: 600; margin-right: 12px;
+}
+.user-info { flex: 1; }
+.nickname { font-size: 15px; font-weight: 600; color: #333; }
+.post-meta { font-size: 11px; color: #999; margin-top: 3px; }
+.type-tag {
+    padding: 4px 12px; border-radius: 12px; font-size: 11px;
+    color: white; font-weight: 500;
+}
+.type-tag.food { background: linear-gradient(135deg, #ff6b6b, #ee5a24); }
+.type-tag.sport { background: linear-gradient(135deg, #4ecdc4, #44bd32); }
+.type-tag.game { background: linear-gradient(135deg, #a55eea, #8854d0); }
+.type-tag.study { background: linear-gradient(135deg, #feca57, #ff9f43); }
+
+.post-content { font-size: 14px; color: #444; line-height: 1.7; margin-bottom: 12px; }
+.post-info {
+    display: flex; align-items: center; gap: 12px; font-size: 12px;
+    color: #888; flex-wrap: wrap;
+}
+.member-count {
+    background: #e8f4fd; color: #1890ff; padding: 4px 12px;
+    border-radius: 10px; font-weight: 600;
+}
+.apply-btn {
+    margin-left: auto; padding: 6px 16px; border: 2px solid #667eea;
+    background: transparent; color: #667eea; border-radius: 20px;
+    cursor: pointer; font-size: 12px; font-weight: 600;
+}
+.apply-btn.applied { background: #667eea; color: white; }
+.apply-btn:disabled {
+    background: #f0f0f0; border-color: #ddd; color: #999; cursor: not-allowed;
+}
+
+/* ===== 发布页 ===== */
+.publish-page { background: white; padding-bottom: 40px; }
+.publish-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 50px 20px 20px; background: white;
+}
+.publish-title { font-size: 18px; font-weight: 600; }
+.type-options {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.type-option {
+    padding: 11px; text-align: center; border: 1.5px solid #e5e5e5;
+    border-radius: 12px; cursor: pointer; background: #fafafa;
+    font-size: 13px; color: #666;
+}
+.type-option.selected {
+    border-color: #667eea; background: #f0f2ff; color: #667eea; font-weight: 600;
+}
+.member-options { display: flex; gap: 10px; }
+.member-option {
+    flex: 1; padding: 10px; text-align: center; border: 1.5px solid #e5e5e5;
+    border-radius: 10px; cursor: pointer; background: #fafafa;
+    font-size: 13px; color: #666;
+}
+.member-option.selected {
+    border-color: #667eea; background: #f0f2ff; color: #667eea; font-weight: 600;
+}
+
+/* ===== 个人中心页 ===== */
+.profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 55px 20px 35px; text-align: center;
+}
+.profile-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); display: flex;
+    align-items: center; justify-content: center; font-size: 32px;
+    font-weight: 700; margin: 0 auto 12px;
+    border: 3px solid rgba(255,255,255,0.3);
+}
+.profile-name { font-size: 20px; font-weight: 700; margin-bottom: 5px; }
+.auth-status-line {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15); padding: 6px 14px;
+    border-radius: 20px; font-size: 12px; margin-top: 8px; cursor: pointer;
+}
+.auth-status-line.unverified { background: rgba(255, 77, 79, 0.25); }
+.auth-status-line.approved { background: rgba(82, 196, 26, 0.25); }
+
+.profile-stats {
+    display: flex; justify-content: center; gap: 35px; margin-top: 22px;
+}
+.stat-item { text-align: center; }
+.stat-num { font-size: 22px; font-weight: 700; }
+.stat-label { font-size: 11px; opacity: 0.85; margin-top: 3px; }
+
+.menu-list {
+    background: white; margin: 18px 15px; border-radius: 16px; overflow: hidden;
+}
+.menu-item {
+    display: flex; align-items: center; padding: 16px 20px;
+    border-bottom: 1px solid #f5f5f5; cursor: pointer;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; margin-right: 14px;
+}
+.menu-text { flex: 1; font-size: 14px; font-weight: 500; color: #333; }
+.menu-value { font-size: 12px; color: #999; margin-right: 6px; }
+.menu-arrow { color: #ccc; font-size: 13px; }
+
+/* ===== 底部导航 ===== */
+.bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px; background: white;
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 10px 0 22px; border-top: 1px solid #eee; z-index: 200;
+}
+.bottom-nav.hidden { display: none; }
+.nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: #999; font-size: 10px; cursor: pointer; padding: 5px 15px;
+}
+.nav-item.active { color: #667eea; }
+.nav-icon { font-size: 22px; }
+.publish-btn-nav {
+    width: 54px; height: 54px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; color: white; font-size: 30px;
+    margin-top: -28px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+    cursor: pointer;
+}
+/* 消息未读角标 */
+.badge {
+    position: absolute; top: -6px; right: -10px;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    background: #ff4d4f; color: white; font-size: 11px;
+    font-weight: 700; border-radius: 9px; display: flex;
+    align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(255, 77, 79, 0.4);
+    box-sizing: content-box; line-height: 1;
+}
+.friend-unread-badge {
+    min-width: 20px; height: 20px; padding: 0 6px;
+    background: #ff4d4f; color: white; font-size: 11px;
+    font-weight: 700; border-radius: 10px; display: flex;
+    align-items: center; justify-content: center;
+}
+.friend-last-msg { font-size: 12px; color: #666; margin-top: 4px; }
+.friend-msg-time { font-size: 11px; color: #999; }
+
+.loading { text-align: center; padding: 40px; color: #999; font-size: 13px; }
+.empty-state { text-align: center; padding: 50px 20px; color: #999; font-size: 13px; }
+.empty-icon { font-size: 50px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ================== 1. 填写个人信息页 ================== -->
+<div class="page form-page active" id="profileEditPage">
+    <div class="form-header">
+        <button class="back-btn" onclick="goBack('profileEditPage')">←</button>
+        <div class="form-title">完善个人信息</div>
+        <div class="form-desc">请填写您的基本信息，将展示在您的主页和发布的帖子中</div>
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">头像</label>
+        <div class="avatar-picker">
+            <div class="avatar-circle" id="avatarCircle" onclick="showToast('将根据昵称自动生成')">点</div>
+        </div>
+        <div class="form-tip" style="text-align: center;">* 将根据昵称自动生成头像</div>
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">昵称<span class="required">*</span></label>
+        <input type="text" class="form-input" id="nicknameInput" placeholder="请输入昵称（2-12字）" maxlength="12">
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">性别<span class="required">*</span></label>
+        <div class="gender-options">
+            <div class="gender-option" data-gender="male" onclick="selectGender(this)">♂ 男生</div>
+            <div class="gender-option" data-gender="female" onclick="selectGender(this)">♀ 女生</div>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">兴趣标签 (至少选1个)</label>
+        <div class="tag-options" id="tagOptions">
+            <div class="tag-option" data-tag="约饭" onclick="toggleTag(this)">🍜 约饭</div>
+            <div class="tag-option" data-tag="运动" onclick="toggleTag(this)">⚽ 运动</div>
+            <div class="tag-option" data-tag="游戏" onclick="toggleTag(this)">🎮 游戏</div>
+            <div class="tag-option" data-tag="自习" onclick="toggleTag(this)">📚 自习</div>
+            <div class="tag-option" data-tag="电影" onclick="toggleTag(this)">🎬 电影</div>
+            <div class="tag-option" data-tag="音乐" onclick="toggleTag(this)">🎵 音乐</div>
+            <div class="tag-option" data-tag="旅行" onclick="toggleTag(this)">✈️ 旅行</div>
+            <div class="tag-option" data-tag="摄影" onclick="toggleTag(this)">📷 摄影</div>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitProfile()">下一步：完成学号认证</button>
+</div>
+
+<!-- ================== 3. 学号认证页 ================== -->
+<div class="page form-page" id="authPage">
+    <div class="form-header">
+        <button class="back-btn" onclick="showPage('profileEditPage')">←</button>
+        <div class="form-title">完成学号认证</div>
+        <div class="form-desc">本平台仅面向<strong style="color:#667eea;">湖南工业大学</strong>在校师生开放，认证通过后方可使用全部功能</div>
+    </div>
+
+    <div class="auth-info-box">
+        <div class="auth-info-icon">🎓</div>
+        <div class="auth-info-text">
+            <strong>认证说明：</strong><br>
+            ① 仅支持<strong>湖南工业大学</strong>在校学生<br>
+            ② 请如实填写您的<strong>真实姓名</strong>和<strong>学号</strong><br>
+            ③ 上传清晰的校园卡照片<br>
+            ④ 系统自动核对学籍信息，约需 1-2 分钟<br>
+            ⑤ 非湖工大师生将无法通过认证
+        </div>
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">真实姓名<span class="required">*</span></label>
+        <input type="text" class="form-input" id="realNameInput" placeholder="例如：张伟" maxlength="20">
+        <div class="form-tip">姓名需与校园卡一致，用于学籍核对</div>
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">学号<span class="required">*</span></label>
+        <input type="text" class="form-input" id="studentIdInput" placeholder="例如：2021010101（10位数字）" maxlength="20">
+        <div class="form-tip">学号将以加密形式存储，仅用于认证审核</div>
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">校园卡照片<span class="required">*</span></label>
+        <div class="upload-box" id="uploadBox" onclick="simulateUpload()" style="border: 2px dashed #667eea; background: linear-gradient(135deg, #f5f7ff, #fef8ff);">
+            <div class="upload-icon" style="font-size: 40px;">📷</div>
+            <div class="upload-text" style="font-weight: 600; color: #667eea;">⬅ 点这里 ➡ 上传校园卡照片</div>
+            <div class="upload-sub">（演示环境：点击即模拟上传成功）</div>
+        </div>
+    </div>
+
+    <div class="auth-info-box green">
+        <div class="auth-info-icon">🔒</div>
+        <div class="auth-info-text">您的个人信息将严格保密，仅用于身份认证审核，不会用于其他用途</div>
+    </div>
+
+    <div class="auth-info-box" style="background: linear-gradient(135deg, #e0e7ff, #ddd6fe); border-color: #6366f1;">
+        <div class="auth-info-icon">💡</div>
+        <div class="auth-info-text" style="font-size: 13px; color: #4338ca;">
+            <strong>测试账号参考：</strong><br>
+            姓名：张伟 &nbsp;学号：2021010101<br>
+            姓名：王芳 &nbsp;学号：2021010102<br>
+            姓名：胡斌 &nbsp;学号：2023020201<br>
+            <span style="color: #7c3aed; font-size: 12px;">※ 必须点击上方「上传校园卡照片」后才能提交</span>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitAuth()">提交认证</button>
+</div>
+
+<!-- ================== 4. 审核中页 ================== -->
+<div class="page form-page" id="pendingPage">
+    <div class="pending-container">
+        <div class="pending-icon" id="pendingIcon">⏳</div>
+        <div class="pending-title" id="pendingTitle">认证审核中</div>
+        <div class="pending-desc" id="pendingDesc">
+            您的认证信息已提交，正在人工审核中。<br>通常需要 1-5 分钟
+        </div>
+    </div>
+
+    <div class="pending-info">
+        <div class="pending-info-item">
+            <span class="pending-info-label">认证状态</span>
+            <span class="status-badge pending" id="statusBadge">审核中</span>
+        </div>
+        <div class="pending-info-item">
+            <span class="pending-info-label">提交时间</span>
+            <span class="pending-info-value" id="submitTime">—</span>
+        </div>
+        <div class="pending-info-item">
+            <span class="pending-info-label">学号</span>
+            <span class="pending-info-value" id="submittedStudentId">—</span>
+        </div>
+        <div class="pending-info-item">
+            <span class="pending-info-label">真实姓名</span>
+            <span class="pending-info-value" id="submittedRealName">—</span>
+        </div>
+        <div class="pending-info-item" id="rejectReasonRow" style="display:none;">
+            <span class="pending-info-label">拒绝原因</span>
+            <span class="pending-info-value" id="rejectReason" style="color:#ff4d4f;font-size:12px;">学号与姓名不匹配，或非湖工大在校学生</span>
+        </div>
+    </div>
+
+    <button class="submit-btn" id="pendingContinueBtn" onclick="continueToHome()" style="display:none;">
+        🎉 审核已通过，进入广场 →
+    </button>
+    <button class="submit-btn" id="pendingBackBtn" onclick="backToAuth()" style="display:none;">
+        ← 返回修改认证信息
+    </button>
+    <button class="submit-btn" id="pendingMockBtn" style="background: #fff; color: #667eea; border: 1.5px solid #667eea; box-shadow: none; margin-top: 0;" onclick="manualReview()">
+        [演示] 点此模拟人工审核
+    </button>
+</div>
+
+<!-- ================== 5. 广场页 ================== -->
+<div class="page" id="homePage">
+    <div class="header">
+        <div class="header-title">找搭子</div>
+        <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="搜索搭子、活动或地点..." id="searchInput">
+        </div>
+    </div>
+
+    <div class="category-bar">
+        <button class="category-tag active" data-type="" onclick="filterByType(this)">全部</button>
+        <button class="category-tag" data-type="约饭" onclick="filterByType(this)">约饭</button>
+        <button class="category-tag" data-type="运动" onclick="filterByType(this)">运动</button>
+        <button class="category-tag" data-type="游戏" onclick="filterByType(this)">游戏</button>
+        <button class="category-tag" data-type="自习" onclick="filterByType(this)">自习</button>
+    </div>
+
+    <div class="post-list" id="postList">
+        <div class="loading"><p>加载中...</p></div>
+    </div>
+</div>
+
+<!-- ================== 6. 发布搭子页 ================== -->
+<div class="page publish-page" id="publishPage">
+    <div class="publish-header">
+        <button class="back-btn" onclick="showPage('homePage')">←</button>
+        <span class="publish-title">发布搭子</span>
+        <div style="width:30px"></div>
+    </div>
+
+    <div class="form-section">
+        <label class="form-label">活动类型<span class="required">*</span></label>
+        <div class="type-options">
+            <div class="type-option selected" data-type="约饭" onclick="selectType(this)">约饭</div>
+            <div class="type-option" data-type="运动" onclick="selectType(this)">运动</div>
+            <div class="type-option" data-type="游戏" onclick="selectType(this)">游戏</div>
+            <div class="type-option" data-type="自习" onclick="selectType(this)">自习</div>
+        </div>
+
+        <label class="form-label" style="margin-top: 18px;">活动描述<span class="required">*</span></label>
+        <textarea class="form-input" id="description" placeholder="说说你想找什么样的搭子..." maxlength="500" style="min-height: 90px;"></textarea>
+        <div style="text-align:right;color:#999;font-size:11px;margin-top:6px;margin-bottom:15px;">
+            <span id="charCount">0</span>/500
+        </div>
+
+        <label class="form-label">活动时间</label>
+        <input type="datetime-local" class="form-input" id="meetTime" style="margin-bottom: 15px;">
+
+        <label class="form-label">活动地点<span class="required">*</span></label>
+        <input type="text" class="form-input" id="location" placeholder="请输入活动地点">
+
+        <label class="form-label" style="margin-top: 18px;">人数上限<span class="required">*</span></label>
+        <div class="member-options">
+            <div class="member-option" data-max="2" onclick="selectMaxMembers(this)">2人</div>
+            <div class="member-option selected" data-max="3" onclick="selectMaxMembers(this)">3人</div>
+            <div class="member-option" data-max="4" onclick="selectMaxMembers(this)">4人</div>
+            <div class="member-option" data-max="5" onclick="selectMaxMembers(this)">5人</div>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitPost()">立即发布</button>
+</div>
+
+<!-- ================== 7. 个人中心页 ================== -->
+<div class="page" id="profilePage">
+    <div class="profile-header">
+        <div class="profile-avatar" id="profileAvatar">我</div>
+        <div class="profile-name" id="profileName">未登录</div>
+        <div id="profileAuthStatus">
+            <div class="auth-status-line unverified" onclick="startAuthFlow()">
+                <span>⚠️</span><span>未完成学号认证，点击完善</span>
+            </div>
+        </div>
+        <div class="profile-stats">
+            <div class="stat-item"><div class="stat-num" id="postCount">0</div><div class="stat-label">发布</div></div>
+            <div class="stat-item"><div class="stat-num" id="joinCount">0</div><div class="stat-label">参与</div></div>
+            <div class="stat-item"><div class="stat-num" id="creditScore">100</div><div class="stat-label">信用分</div></div>
+        </div>
+    </div>
+
+    <div style="padding: 18px 15px 0;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:#666;">我的兴趣标签</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="myTags">
+            <span style="background:#f5f5f5;color:#999;padding:6px 14px;border-radius:15px;font-size:12px;">暂未设置</span>
+        </div>
+    </div>
+
+    <div class="menu-list">
+        <div class="menu-item" onclick="showPage('myPostsPage')">
+            <div class="menu-icon" style="background:#fff7e6;color:#ff9800;">📝</div>
+            <span class="menu-text">我的发布</span>
+            <span class="menu-value" id="myPostCount">0</span>
+            <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="showPage('myApplicationsPage')">
+            <div class="menu-icon" style="background:#e6f4ff;color:#1677ff;">📋</div>
+            <span class="menu-text">我的申请</span>
+            <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="showPage('myInvitationsPage')">
+            <div class="menu-icon" style="background:#f6ffed;color:#52c41a;">📅</div>
+            <span class="menu-text">我的邀约</span>
+            <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="showPage('friendsPage'); setTimeout(() => refreshFriendsPage(), 50);">
+            <div class="menu-icon" style="background:#fff0f6;color:#eb2f96;">👥</div>
+            <span class="menu-text">我的好友</span>
+            <span class="menu-value" id="friendsCount">0</span>
+            <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="showPage('authDetailPage')">
+            <div class="menu-icon" style="background:#fff1f0;color:#ff4d4f;">🔐</div>
+            <span class="menu-text">学号认证</span>
+            <span class="status-badge pending" id="profileAuthBadge" style="font-size: 11px;">去认证</span>
+            <span class="menu-arrow" style="margin-left: 8px;">›</span>
+        </div>
+        <div class="menu-item" onclick="showPage('settingsPage')">
+            <div class="menu-icon" style="background:#f0f2ff;color:#667eea;">⚙️</div>
+            <span class="menu-text">设置</span>
+            <span class="menu-arrow">›</span>
+        </div>
+        <div class="menu-item" onclick="logout()" style="border-top: 1px solid #f5f5f5;">
+            <div class="menu-icon" style="background:#fff1f0;color:#ff4d4f;">🚪</div>
+            <span class="menu-text" style="color: #ff4d4f;">退出登录</span>
+        </div>
+    </div>
+</div>
+
+<!-- ================== 8. 我的发布 ================== -->
+<div class="page" id="myPostsPage">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('profilePage')">‹</button>
+        <span class="sub-page-title">我的发布</span>
+        <span style="width:36px;"></span>
+    </div>
+    <div class="post-list" id="myPostsList" style="padding: 15px 15px 100px;">
+        <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <p>还没有发布过搭子</p>
+            <p style="font-size:12px;margin-top:5px;">点击下方按钮，去发布第一个吧</p>
+            <button class="primary-btn-sm" onclick="showPublish()">+ 发布新搭子</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================== 9. 我的申请 ================== -->
+<div class="page" id="myApplicationsPage">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('profilePage')">‹</button>
+        <span class="sub-page-title">我的申请</span>
+        <span style="width:36px;"></span>
+    </div>
+    <div class="tab-bar" id="applicationTabs">
+        <div class="tab-item active" data-tab="pending" onclick="switchApplicationTab(this)">待处理</div>
+        <div class="tab-item" data-tab="approved" onclick="switchApplicationTab(this)">已通过</div>
+        <div class="tab-item" data-tab="rejected" onclick="switchApplicationTab(this)">已拒绝</div>
+    </div>
+    <div class="post-list" id="myApplicationsList" style="padding: 15px 15px 100px;">
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p>暂无申请记录</p>
+            <p style="font-size:12px;margin-top:5px;">去广场页看看有哪些感兴趣的搭子</p>
+            <button class="primary-btn-sm" onclick="showHomeFromSide()">去广场逛逛</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================== 10. 我的邀约 ================== -->
+<div class="page" id="myInvitationsPage">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('profilePage')">‹</button>
+        <span class="sub-page-title">我的邀约</span>
+        <span style="width:36px;"></span>
+    </div>
+    <div class="tip-card">
+        <span style="font-size:18px;">💡</span>
+        <span style="font-size:13px;color:#666;">这里显示别人申请加入你发布的搭子的邀约信息，你可以选择同意或拒绝。</span>
+    </div>
+    <div class="post-list" id="myInvitationsList" style="padding: 15px 15px 100px;">
+        <div class="empty-state">
+            <div class="empty-icon">📅</div>
+            <p>暂无邀约请求</p>
+            <p style="font-size:12px;margin-top:5px;">当有人申请加入你发布的搭子时，会显示在这里</p>
+            <button class="primary-btn-sm" onclick="showPublish()">去发布搭子</button>
+        </div>
+    </div>
+</div>
+
+<!-- 好友列表页 -->
+<div class="page" id="friendsPage">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('profilePage')">‹</button>
+        <span class="sub-page-title" id="friendsHeader">我的好友</span>
+        <span style="width:36px;"></span>
+    </div>
+    <div class="post-list" id="friendsList" style="padding: 15px 15px 100px;">
+        <div class="empty-state">
+            <div class="empty-icon">👥</div>
+            <p>还没有好友</p>
+            <p style="font-size:12px;margin-top:5px;">在「我的邀约」同意申请后可以添加好友</p>
+        </div>
+    </div>
+</div>
+
+<!-- 推荐页面 -->
+<div class="page" id="recommendPage">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('homePage')">‹</button>
+        <span class="sub-page-title" id="recommendHeader">智能推荐</span>
+        <span style="width:36px;"></span>
+    </div>
+    <div style="padding: 12px 15px 100px;">
+        <div id="recommendSummary" style="background: linear-gradient(135deg,#f5f7ff,#fef8ff); padding: 16px; border-radius: 12px; margin-bottom: 15px; font-size: 13px; color: #4a5568;">
+            <div style="display:flex; align-items:center; gap: 8px;">
+                <span style="font-size: 22px;">🎯</span>
+                <span>根据你发布的帖子，为你智能匹配相似搭子</span>
+            </div>
+        </div>
+        <div class="post-list" id="recommendList" style="padding: 0;">
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <p>暂无推荐</p>
+                <p style="font-size:12px;margin-top:5px;">先去发布一个搭子，系统会为你推荐相似内容</p>
+                <button class="primary-btn-sm" onclick="showPublish()">+ 去发布</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 聊天页面 -->
+<div class="page" id="chatPage" style="padding:0;">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('friendsPage')">‹</button>
+        <span class="sub-page-title" id="chatTitle">聊天</span>
+        <span style="width:36px;"></span>
+    </div>
+    <div id="chatMessages" style="padding: 20px 12px;min-height: calc(100vh - 200px);background:linear-gradient(180deg,#f5f7fa,#e4e8f0);display:flex;flex-direction:column;"></div>
+    <div id="chatInputBar" style="position:sticky;bottom:0;padding:12px 15px;background:#fff;border-top:1px solid #f0f0f0;display:flex;gap:10px;align-items:center;max-width:430px;margin:0 auto;">
+        <input type="text" id="chatInput" placeholder="输入消息..." style="flex:1;padding:12px 16px;border:1.5px solid #e8e8e8;border-radius:24px;outline:none;font-size:14px;" onkeydown="if(event.key==='Enter') sendMessage();">
+        <button onclick="sendMessage()" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;padding:12px 22px;border-radius:24px;font-weight:700;font-size:14px;box-shadow:0 4px 12px rgba(102,126,234,0.4);">发送</button>
+    </div>
+</div>
+
+<!-- ================== 11. 学号认证详情页 ================== -->
+<div class="page" id="authDetailPage">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('profilePage')">‹</button>
+        <span class="sub-page-title">学号认证</span>
+        <span style="width:36px;"></span>
+    </div>
+
+    <div class="auth-status-card" id="authStatusCard">
+        <div class="auth-status-icon" id="authStatusIcon">⏳</div>
+        <div class="auth-status-title" id="authStatusTitle">认证审核中</div>
+        <div class="auth-status-desc" id="authStatusDesc">您的信息正在人工审核中，请耐心等待</div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-section-title">认证信息</div>
+        <div class="info-row">
+            <span class="info-label">真实姓名</span>
+            <span class="info-value" id="authRealNameValue">—</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">学号</span>
+            <span class="info-value" id="authStudentIdValue">—</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">提交时间</span>
+            <span class="info-value" id="authSubmitTimeValue">—</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">审核时间</span>
+            <span class="info-value" id="authApprovedTimeValue">—</span>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-section-title">认证说明</div>
+        <div style="padding: 15px 18px; font-size:13px; color:#666; line-height:1.9;">
+            <div style="margin-bottom:6px;">🎓 本平台仅面向 <strong style="color:#667eea;">湖南工业大学</strong> 在校师生开放</div>
+            <div style="margin-bottom:6px;">🔐 您的个人信息将严格保密，仅用于身份验证</div>
+            <div style="margin-bottom:6px;">✅ 认证通过后，可完整使用发布、申请加入等所有功能</div>
+            <div>⚠️ 每位用户只能进行一次学号认证，认证后信息无法修改</div>
+        </div>
+    </div>
+
+    <div style="padding: 25px 20px 50px;">
+        <button class="submit-btn" id="authDetailActionBtn" onclick="startAuthFlow()">去提交认证</button>
+    </div>
+</div>
+
+<!-- ================== 12. 设置页面 ================== -->
+<div class="page" id="settingsPage">
+    <div class="sub-page-header">
+        <button class="back-btn-circle" onclick="showPage('profilePage')">‹</button>
+        <span class="sub-page-title">设置</span>
+        <span style="width:36px;"></span>
+    </div>
+
+    <div class="info-section">
+        <div class="info-section-title">个人信息</div>
+        <div class="info-row">
+            <span class="info-label">昵称</span>
+            <span class="info-value clickable" onclick="editNickname()" id="settingsNickname">未设置 ›</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">性别</span>
+            <span class="info-value clickable" onclick="editGender()" id="settingsGender">未设置 ›</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">兴趣标签</span>
+            <span class="info-value clickable" onclick="editTags()" id="settingsTags">未设置 ›</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">头像</span>
+            <span class="info-value clickable" onclick="editAvatar()">点击更换 ›</span>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-section-title">账号与安全</div>
+        <div class="info-row">
+            <span class="info-label">用户ID</span>
+            <span class="info-value" id="settingsUserId">—</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">信用分</span>
+            <span class="info-value" id="settingsCreditScore">100</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">隐私设置</span>
+            <span class="info-value clickable" onclick="showToast('隐私设置功能开发中')">前往设置 ›</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">消息通知</span>
+            <span class="info-value clickable" onclick="showToast('通知设置功能开发中')">前往设置 ›</span>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-section-title">其他</div>
+        <div class="info-row">
+            <span class="info-label">关于我们</span>
+            <span class="info-value clickable" onclick="showAbout()">校园搭子 v1.0 ›</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">用户协议</span>
+            <span class="info-value clickable" onclick="showToast('请联系管理员获取用户协议')">查看 ›</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">帮助与反馈</span>
+            <span class="info-value clickable" onclick="showToast('感谢您的反馈！')">前往 ›</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">清除缓存</span>
+            <span class="info-value clickable" onclick="clearCache()">点击清除 ›</span>
+        </div>
+    </div>
+
+    <div style="padding: 25px 20px 50px;">
+        <button class="danger-btn" onclick="logout()">退出登录</button>
+    </div>
+</div>
+
+<!-- ================== 底部导航 ================== -->
+<div class="bottom-nav hidden" id="bottomNav">
+    <div class="nav-item active" onclick="switchNav(this, 'homePage')">
+        <span class="nav-icon">🏠</span><span>广场</span>
+    </div>
+    <div class="nav-item" onclick="switchNav(this, 'recommendPage')">
+        <span class="nav-icon">⭐</span><span>推荐</span>
+    </div>
+    <div class="publish-btn-nav" onclick="showPublish()">+</div>
+    <div class="nav-item" onclick="switchNav(this, 'friendsPage')">
+        <div style="position:relative;display:inline-block;">
+            <span class="nav-icon">💬</span>
+            <span class="badge" id="msgBadge" style="display:none;">0</span>
+        </div><span>消息</span>
+    </div>
+    <div class="nav-item" onclick="switchNav(this, 'profilePage')">
+        <span class="nav-icon">👤</span><span>我的</span>
+    </div>
+</div>
+
+<script>
+// ============ 全局状态 ============
+const API_BASE = 'http://localhost:8080/api';
+let currentUser = {
+    id: null, nickname: '', gender: '', tags: [],
+    studentId: '', realName: '', authStatus: 0, // 0未认证 1审核中 2已认证 3被拒
+    postCount: 0, joinCount: 0, creditScore: 100,
+    token: null, submitTime: null
+};
+
+// 湖南工业大学学籍数据库（学号+姓名 配对才视为有效）
+const hutStudentDB = [
+    { id: '2021010101', name: '张伟' },
+    { id: '2021010102', name: '王芳' },
+    { id: '2021020201', name: '李娜' },
+    { id: '2021020202', name: '刘洋' },
+    { id: '2021030301', name: '陈静' },
+    { id: '2021030302', name: '杨帆' },
+    { id: '2022010101', name: '赵磊' },
+    { id: '2022010102', name: '黄敏' },
+    { id: '2022020201', name: '周杰' },
+    { id: '2022020202', name: '吴静' },
+    { id: '2022030301', name: '徐强' },
+    { id: '2022030302', name: '孙丽' },
+    { id: '2023010101', name: '马超' },
+    { id: '2023010102', name: '朱琳' },
+    { id: '2023020201', name: '胡斌' },
+    { id: '2023020202', name: '郭晓' },
+    { id: '2023030301', name: '何芳' },
+    { id: '2023030302', name: '高远' },
+    { id: '2024010101', name: '林峰' },
+    { id: '2024010102', name: '黄蓉' }
+];
+let selectedGender = '';
+let selectedTags = [];
+let selectedType = '约饭';
+let selectedMaxMembers = 3;
+let uploadMocked = false;
+let currentFilterType = '';
+
+// 默认帖子（首次访问使用，之后从 localStorage 恢复）
+const defaultPosts = [
+    { id: 1, publisherId: 1001, publisherNickname: '李小明', type: '约饭',
+      description: '二食堂新开的火锅店，中午12点有人一起拼桌吗？还差2个人！',
+      location: '二食堂', meet_time: new Date().toISOString(),
+      current_members: 2, max_members: 4 },
+    { id: 2, publisherId: 1002, publisherNickname: '王小红', type: '运动',
+      description: '下午4点体育馆打羽毛球，找搭子一起！水平不限，主打快乐运动~',
+      location: '体育馆', meet_time: new Date().toISOString(),
+      current_members: 3, max_members: 4 },
+    { id: 3, publisherId: 1003, publisherNickname: '张小刚', type: '游戏',
+      description: '晚上开黑打王者！钻石段位以上来，目标上星耀，冲冲冲！',
+      location: '线上', meet_time: new Date().toISOString(),
+      current_members: 3, max_members: 5 },
+    { id: 4, publisherId: 1004, publisherNickname: '陈小美', type: '自习',
+      description: '明天上午图书馆自习，准备期末考试，找个学习搭子互相监督！',
+      location: '图书馆3楼', meet_time: new Date().toISOString(),
+      current_members: 1, max_members: 2 }
+];
+
+// 从 localStorage 加载帖子数据（首次访问用默认值）
+(function loadPostsData() {
+    try {
+        const savedPosts = localStorage.getItem('campusBuddyPosts');
+        window.mockPosts = savedPosts ? JSON.parse(savedPosts) : defaultPosts;
+    } catch (e) { window.mockPosts = defaultPosts; }
+    try {
+        const savedApps = localStorage.getItem('campusBuddyApplications');
+        window.myApplications = savedApps ? JSON.parse(savedApps) : [];
+    } catch (e) { window.myApplications = []; }
+    try {
+        const savedInvs = localStorage.getItem('campusBuddyInvitations');
+        window.myInvitations = savedInvs ? JSON.parse(savedInvs) : [];
+    } catch (e) { window.myInvitations = []; }
+    // 加载好友和消息
+    try {
+        const savedFriends = localStorage.getItem('campusBuddyFriends');
+        window.friends = savedFriends ? JSON.parse(savedFriends) : [];
+    } catch (e) { window.friends = []; }
+    try {
+        const savedMessages = localStorage.getItem('campusBuddyMessages');
+        window.messages = savedMessages ? JSON.parse(savedMessages) : [];
+    } catch (e) { window.messages = []; }
+})();
+
+// 保存帖子/申请/邀约数据到 localStorage
+function savePostsData() {
+    try {
+        localStorage.setItem('campusBuddyPosts', JSON.stringify(window.mockPosts || []));
+        localStorage.setItem('campusBuddyApplications', JSON.stringify(window.myApplications || []));
+        localStorage.setItem('campusBuddyInvitations', JSON.stringify(window.myInvitations || []));
+        localStorage.setItem('campusBuddyFriends', JSON.stringify(window.friends || []));
+        localStorage.setItem('campusBuddyMessages', JSON.stringify(window.messages || []));
+    } catch (e) {}
+}
+
+// ============ 初始化 ============
+document.addEventListener('DOMContentLoaded', () => {
+    // 按学号为 key 存储用户资料，实现"一人一号"
+    const currentStudentId = localStorage.getItem('campusBuddyCurrentStudentId');
+    if (currentStudentId) {
+        // 从该学号对应的历史资料中恢复用户信息
+        const savedUser = localStorage.getItem('campusBuddyUser_' + currentStudentId);
+        if (savedUser) {
+            try { currentUser = { ...currentUser, ...JSON.parse(savedUser) }; } catch (e) {}
+        }
+    }
+    routeByUserState();
+    // 字数统计
+    const desc = document.getElementById('description');
+    if (desc) desc.addEventListener('input', () => {
+        document.getElementById('charCount').textContent = desc.value.length;
+    });
+});
+
+// 根据用户状态路由：先学号认证 → 新学号进入昵称设定 → 已认证过的学号直接进主页
+function routeByUserState() {
+    // 1. 没有学号 → 必须先进行学号认证
+    if (!currentUser.studentId) {
+        showPage('authPage');
+        return;
+    }
+    // 2. 有学号但没有昵称 → 新学号，需要填写个人信息
+    if (!currentUser.nickname) {
+        // 自动生成用户 ID 和 token（新用户首次用此学号登录）
+        if (!currentUser.id) {
+            currentUser.id = Math.floor(Math.random() * 1000000);
+            currentUser.token = 'user-' + currentUser.id;
+            saveUserState();
+        }
+        showPage('profileEditPage');
+        return;
+    }
+    // 3. 有学号有昵称但认证状态异常（审核中/被拒）
+    if (currentUser.authStatus === 0 || currentUser.authStatus === 3) {
+        showPage('authPage');
+        return;
+    }
+    if (currentUser.authStatus === 1) {
+        showPage('pendingPage');
+        refreshPendingPage();
+        return;
+    }
+    // 4. 已认证过的学号，直接进入主页
+    showPage('homePage');
+    setTimeout(() => { loadPosts(); refreshProfilePage(); }, 50);
+}
+
+// ============ 通用：显示页面 ============
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    // 底部导航在广场、推荐、个人中心显示
+    const nav = document.getElementById('bottomNav');
+    if (pageId === 'homePage' || pageId === 'profilePage' || pageId === 'recommendPage') {
+        nav.classList.remove('hidden');
+    } else {
+        nav.classList.add('hidden');
+    }
+    // 更新消息角标
+    updateMsgBadge();
+    if (pageId === 'myPostsPage') refreshMyPosts();
+    if (pageId === 'myApplicationsPage') refreshMyApplications('pending');
+    if (pageId === 'myInvitationsPage') refreshMyInvitations();
+    if (pageId === 'authDetailPage') refreshAuthDetail();
+    if (pageId === 'settingsPage') refreshSettingsPage();
+    if (pageId === 'friendsPage') refreshFriendsPage();
+    if (pageId === 'recommendPage') refreshRecommendPage();
+    if (pageId === 'authPage') {
+        uploadMocked = false;
+        const box = document.getElementById('uploadBox');
+        if (box) {
+            box.innerHTML = '<div style="font-size: 40px;">📷</div>' +
+                '<div style="font-weight: 700; color: #667eea; margin-top: 10px;">⬅ 点这里 ➡ 上传校园卡照片</div>' +
+                '<div style="font-size: 12px; color: #718096; margin-top: 8px;">（演示环境：点击即模拟上传成功）</div>';
+            box.style.border = '2px dashed #667eea';
+            box.style.background = 'linear-gradient(135deg, #f5f7ff, #fef8ff)';
+        }
+        prefillAuthFields();
+    }
+    window.scrollTo(0, 0);
+}
+
+function switchNav(el, pageId) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    if (pageId) {
+        showPage(pageId);
+        if (pageId === 'profilePage') refreshProfilePage();
+        if (pageId === 'homePage') loadPosts();
+    } else {
+        showToast('功能开发中');
+    }
+}
+
+function showPublish() {
+    if (currentUser.authStatus !== 2) {
+        showToast('请先完成学号认证后再发布');
+        return;
+    }
+    showPage('publishPage');
+}
+
+function goBack(fromPage) {
+    if (fromPage === 'profileEditPage') {
+        currentUser = {};
+        saveUserState();
+    }
+    routeByUserState();
+}
+
+// ============ Toast ============
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.style.display = 'none', 1800);
+}
+
+function saveUserState() {
+    // 按学号为 key 存储用户资料，实现"一人一号"
+    if (currentUser.studentId) {
+        localStorage.setItem('campusBuddyCurrentStudentId', currentUser.studentId);
+        localStorage.setItem('campusBuddyUser_' + currentUser.studentId, JSON.stringify(currentUser));
+    }
+    // 同时保留通用存储，确保向后兼容
+    localStorage.setItem('campusBuddyUser', JSON.stringify(currentUser));
+}
+
+// 简化登录：自动生成用户 ID，无需微信登录按钮
+async function wxLogin() {
+    if (!currentUser.id) {
+        currentUser.id = Math.floor(Math.random() * 1000000);
+        currentUser.token = 'user-' + currentUser.id;
+        saveUserState();
+    }
+    routeByUserState();
+}
+
+// ============ 2. 填写个人信息 ============
+function selectGender(el) {
+    document.querySelectorAll('.gender-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedGender = el.dataset.gender;
+}
+function toggleTag(el) {
+    const tag = el.dataset.tag;
+    if (el.classList.contains('selected')) {
+        el.classList.remove('selected');
+        selectedTags = selectedTags.filter(t => t !== tag);
+    } else {
+        el.classList.add('selected');
+        selectedTags.push(tag);
+    }
+}
+async function submitProfile() {
+    const nickname = document.getElementById('nicknameInput').value.trim();
+    if (nickname.length < 2) { showToast('请填写昵称（至少2字）'); return; }
+    if (!selectedGender) { showToast('请选择性别'); return; }
+    if (selectedTags.length === 0) { showToast('请至少选择1个兴趣标签'); return; }
+
+    // 确保用户有 ID（首次填写昵称时生成）
+    if (!currentUser.id) {
+        currentUser.id = Math.floor(Math.random() * 1000000);
+        currentUser.token = 'user-' + currentUser.id;
+    }
+
+    currentUser.nickname = nickname;
+    currentUser.gender = selectedGender;
+    currentUser.tags = [...selectedTags];
+    saveUserState();
+
+    try {
+        await fetch(`${API_BASE}/user/profile`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUser.token}`},
+            body: JSON.stringify({ nickname, gender: selectedGender, tags: selectedTags.join(',') })
+        });
+    } catch (e) {}
+
+    showToast('信息已保存');
+    // 新流程：学号认证 → 昵称设定 → 主页
+    // 如果已有学号且已认证通过 → 直接进入主页
+    if (currentUser.studentId && currentUser.authStatus === 2) {
+        setTimeout(() => {
+            showPage('homePage');
+            setTimeout(() => { loadPosts(); refreshProfilePage(); }, 100);
+        }, 500);
+    } else {
+        setTimeout(() => routeByUserState(), 500);
+    }
+}
+
+// ============ 3. 认证提交 ============
+function simulateUpload() {
+    const box = document.getElementById('uploadBox');
+    box.innerHTML = '<div style="padding: 20px; text-align: center;">' +
+        '<div style="font-size: 50px;">✅</div>' +
+        '<div style="font-weight: 700; color: #4a5568; margin-top: 10px;">校园卡已上传</div>' +
+        '<div style="font-size: 12px; color: #718096; margin-top: 8px;">（演示模式：照片已加密保存）</div>' +
+        '</div>';
+    box.style.border = '2px solid #48bb78';
+    box.style.background = 'linear-gradient(135deg, #f0fff4, #e6fffa)';
+    uploadMocked = true;
+    showToast('照片上传成功');
+}
+// 判断学号+姓名是否匹配湖南工业大学学籍（宽松匹配）
+function isValidHUTStudent(studentId, realName) {
+    if (!studentId || !realName) return false;
+    const normalizedId = studentId.trim().replace(/\s+/g, '').replace(/\./g, '');
+    const normalizedName = realName.trim();
+    return hutStudentDB.some(s => s.id === normalizedId && s.name === normalizedName);
+}
+
+// 进入认证页时预填充用户之前填过的学号和姓名
+function prefillAuthFields() {
+    const nameInput = document.getElementById('realNameInput');
+    const idInput = document.getElementById('studentIdInput');
+    if (nameInput && currentUser.realName) nameInput.value = currentUser.realName;
+    if (idInput && currentUser.studentId) idInput.value = currentUser.studentId;
+}
+
+async function submitAuth() {
+    const studentId = document.getElementById('studentIdInput').value.trim();
+    const realName = document.getElementById('realNameInput').value.trim();
+    if (!realName) { showToast('❗ 请输入真实姓名'); return; }
+    if (!studentId) { showToast('❗ 请输入学号'); return; }
+    if (!uploadMocked) { showToast('❗ 请点击上方「上传校园卡照片」的区域'); return; }
+
+    // 关键：检查此学号是否有历史用户资料（一人一号）
+    const existingUser = localStorage.getItem('campusBuddyUser_' + studentId);
+
+    if (existingUser) {
+        // 🔴 已认证过的学号 → 恢复历史资料，直接进入主页，无需再填昵称
+        try {
+            const savedUser = JSON.parse(existingUser);
+            currentUser = { ...currentUser, ...savedUser };
+            currentUser.studentId = studentId;
+            currentUser.realName = realName;
+            if (!currentUser.id) {
+                currentUser.id = Math.floor(Math.random() * 1000000);
+                currentUser.token = 'user-' + currentUser.id;
+            }
+            saveUserState();
+            showToast('欢迎回来，' + (currentUser.nickname || '同学'));
+            setTimeout(() => {
+                showPage('homePage');
+                setTimeout(() => { loadPosts(); refreshProfilePage(); }, 50);
+            }, 500);
+            return;
+        } catch (e) {}
+    }
+
+    // 🟢 新学号 → 保存学号和姓名，进入审核，审核通过后再填昵称
+    currentUser.studentId = studentId;
+    currentUser.realName = realName;
+    currentUser.authStatus = 1;
+    currentUser.submitTime = new Date().toISOString();
+    // 新学号首次认证时不生成 id 和 token，等填写完昵称后再生成
+    saveUserState();
+
+    try {
+        await fetch(`${API_BASE}/user/auth`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${currentUser.token || ''}`},
+            body: JSON.stringify({ studentId, realName })
+        });
+    } catch (e) {}
+
+    showToast('认证信息已提交');
+    setTimeout(() => {
+        showPage('pendingPage');
+        refreshPendingPage();
+        // 3秒后模拟人工审核结果 - 根据学校自动判断
+        setTimeout(() => manualReview(), 3500);
+    }, 600);
+}
+
+// 人工审核：学号+姓名必须匹配湖南工业大学学籍库
+function manualReview() {
+    if (currentUser.authStatus !== 1) return;
+    if (isValidHUTStudent(currentUser.studentId, currentUser.realName)) {
+        currentUser.authStatus = 2; // 审核通过
+        saveUserState();
+        refreshPendingPage();
+        showToast('🎉 恭喜！认证通过');
+        // 关键：审核通过后检查是否已填写昵称
+        // 新学号 → 进入昵称设定；已填过 → 直接进入主页
+        setTimeout(() => {
+            if (!currentUser.nickname) {
+                // 新学号：需要填写个人信息
+                showPage('profileEditPage');
+            } else {
+                // 已有资料：直接进入主页
+                showPage('homePage');
+                setTimeout(() => { loadPosts(); refreshProfilePage(); }, 100);
+            }
+        }, 1200);
+    } else {
+        currentUser.authStatus = 3; // 审核拒绝 - 学号姓名不匹配
+        saveUserState();
+        refreshPendingPage();
+    }
+}
+
+function refreshPendingPage() {
+    document.getElementById('submittedStudentId').textContent =
+        currentUser.studentId ? maskStudentId(currentUser.studentId) : '—';
+    document.getElementById('submittedRealName').textContent = currentUser.realName || '—';
+    document.getElementById('submitTime').textContent =
+        currentUser.submitTime ? formatDateTime(currentUser.submitTime) : '—';
+
+    const badge = document.getElementById('statusBadge');
+    const title = document.getElementById('pendingTitle');
+    const desc = document.getElementById('pendingDesc');
+    const icon = document.getElementById('pendingIcon');
+    const continueBtn = document.getElementById('pendingContinueBtn');
+    const backBtn = document.getElementById('pendingBackBtn');
+    const mockBtn = document.getElementById('pendingMockBtn');
+    const rejectRow = document.getElementById('rejectReasonRow');
+
+    if (currentUser.authStatus === 1) {
+        badge.textContent = '审核中'; badge.className = 'status-badge pending';
+        title.textContent = '认证审核中';
+        desc.innerHTML = '您的认证信息已提交，正在人工审核中。<br>通常需要 1-5 分钟';
+        icon.textContent = '⏳';
+        continueBtn.style.display = 'none';
+        backBtn.style.display = 'none';
+        if (rejectRow) rejectRow.style.display = 'none';
+    } else if (currentUser.authStatus === 2) {
+        badge.textContent = '✓ 已通过'; badge.className = 'status-badge approved';
+        title.textContent = '🎉 认证通过！';
+        desc.innerHTML = '恭喜，您已完成学号认证！<br>现在可以完整使用校园搭子的所有功能';
+        icon.textContent = '✅';
+        continueBtn.style.display = 'block';
+        backBtn.style.display = 'none';
+        if (mockBtn) mockBtn.style.display = 'none';
+        if (rejectRow) rejectRow.style.display = 'none';
+    } else if (currentUser.authStatus === 3) {
+        badge.textContent = '已拒绝'; badge.className = 'status-badge rejected';
+        title.textContent = '❌ 认证未通过';
+        desc.innerHTML = '很抱歉！本平台<strong style="color:#ff4d4f;">仅面向湖南工业大学在校师生开放</strong>。<br>请确认您的学号与真实姓名是否匹配后重新提交认证。';
+        icon.textContent = '⛔';
+        continueBtn.style.display = 'none';
+        backBtn.style.display = 'block';
+        if (mockBtn) mockBtn.style.display = 'none';
+        if (rejectRow) rejectRow.style.display = 'flex';
+    }
+}
+
+function continueToHome() {
+    // 审核通过后：新学号需要先填写个人信息，已填过的直接进入主页
+    if (!currentUser.nickname) {
+        showPage('profileEditPage');
+        showToast('请先完善个人信息');
+    } else {
+        showPage('homePage');
+        setTimeout(() => { loadPosts(); refreshProfilePage(); }, 100);
+        showToast('欢迎回来，' + currentUser.nickname);
+    }
+}
+
+function backToAuth() {
+    // 重置认证状态，返回认证页重新填写
+    currentUser.authStatus = 0;
+    saveUserState();
+    showPage('authPage');
+    // 重置照片上传状态，让用户重新操作
+    uploadMocked = false;
+    const box = document.getElementById('uploadBox');
+    if (box) {
+        box.innerHTML = '<div class="upload-icon">📷</div><div class="upload-text">点击上传校园卡照片</div><div class="upload-sub">支持 JPG/PNG 格式</div>';
+    }
+}
+
+// ============ 4. 广场页 ============
+function filterByType(el) {
+    document.querySelectorAll('.category-tag').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    currentFilterType = el.dataset.type;
+    renderPosts(window.mockPosts || []);
+}
+function loadPosts() {
+    try {
+        fetch(`${API_BASE}/post/list`, { headers: {'Authorization': `Bearer ${currentUser.token}`} })
+            .then(r => r.json()).then(r => {
+                if (r && r.code === 200 && r.data && r.data.length > 0) {
+                    renderPosts(r.data);
+                } else {
+                    renderPosts(window.mockPosts || []);
+                }
+            }).catch(() => renderPosts(window.mockPosts || []));
+    } catch (e) { renderPosts(window.mockPosts || []); }
+}
+function renderPosts(posts) {
+    const container = document.getElementById('postList');
+    const filtered = currentFilterType ? posts.filter(p => p.type === currentFilterType) : posts;
+    if (!filtered || filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>暂无相关搭子</p><p style="margin-top:5px;">点击 + 发布一个吧~</p></div>`;
+        return;
+    }
+    container.innerHTML = filtered.map(post => {
+        const typeClass = getTypeClass(post.type);
+        const isFull = post.current_members >= post.max_members;
+        const isMine = post.publisherId === currentUser.id;
+        let actionBtn;
+        if (isMine) {
+            actionBtn = `<button class="apply-btn applied" onclick="showToast('这是你发布的搭子')">👤 我发布的</button>`;
+        } else if (isFull) {
+            actionBtn = `<button class="apply-btn applied" disabled>已满员</button>`;
+        } else {
+            actionBtn = `<button class="apply-btn" onclick="applyPost(${post.id}, this)">✨ 我想去</button>`;
+        }
+        return `
+        <div class="post-card">
+            <div class="post-header">
+                <div class="avatar">${post.publisherNickname ? post.publisherNickname.charAt(0) : '?'}</div>
+                <div class="user-info">
+                    <div class="nickname">${post.publisherNickname || '匿名'}</div>
+                    <div class="post-meta">${formatTime(post.create_time || post.meet_time)} · ${post.location || ''}</div>
+                </div>
+                <span class="type-tag ${typeClass}">${post.type}</span>
+            </div>
+            <div class="post-content">${post.description}</div>
+            <div class="post-info">
+                <span>🕐 ${formatMeetTime(post.meet_time)}</span>
+                <span>📍 ${post.location || '待定'}</span>
+                <span class="member-count">👥 ${post.current_members}/${post.max_members}人</span>
+                ${actionBtn}
+            </div>
+        </div>`;
+    }).join('');
+}
+function getTypeClass(type) {
+    return { '约饭': 'food', '运动': 'sport', '游戏': 'game', '自习': 'study' }[type] || 'food';
+}
+// 已被后续的同名函数覆盖，请查看下方 applyPost 实现
+
+// ============ 5. 发布搭子 ============
+function selectType(el) {
+    document.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedType = el.dataset.type;
+}
+function selectMaxMembers(el) {
+    document.querySelectorAll('.member-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedMaxMembers = parseInt(el.dataset.max);
+}
+// 已被后续的同名函数覆盖，请查看下方 submitPost 实现
+
+// ============ 6. 个人中心 ============
+function refreshProfilePage() {
+    document.getElementById('profileAvatar').textContent = currentUser.nickname ? currentUser.nickname.charAt(0) : '我';
+    document.getElementById('profileName').textContent = currentUser.nickname || '未登录';
+
+    const authBox = document.getElementById('profileAuthStatus');
+    const authBadge = document.getElementById('profileAuthBadge');
+    if (currentUser.authStatus === 2) {
+        authBox.innerHTML = `<div class="auth-status-line approved"><span>✓</span><span>已完成学号认证 · 湖南工业大学</span></div>`;
+        authBadge.textContent = '已认证';
+        authBadge.style.background = '#f6ffed'; authBadge.style.color = '#52c41a';
+    } else if (currentUser.authStatus === 1) {
+        authBox.innerHTML = `<div class="auth-status-line unverified" onclick="showPage('pendingPage')"><span>⏳</span><span>认证审核中</span></div>`;
+        authBadge.textContent = '审核中';
+        authBadge.style.background = '#fff7e6'; authBadge.style.color = '#fa8c16';
+    } else if (currentUser.authStatus === 3) {
+        authBox.innerHTML = `<div class="auth-status-line unverified" onclick="startAuthFlow()"><span>⛔</span><span>认证未通过（仅湖工大师生），点击重试</span></div>`;
+        authBadge.textContent = '未通过';
+        authBadge.style.background = '#fff1f0'; authBadge.style.color = '#ff4d4f';
+    } else {
+        authBox.innerHTML = `<div class="auth-status-line unverified" onclick="startAuthFlow()"><span>⚠️</span><span>未完成认证，点击完善</span></div>`;
+        authBadge.textContent = '去认证';
+        authBadge.style.background = '#fff1f0'; authBadge.style.color = '#ff4d4f';
+    }
+
+    document.getElementById('postCount').textContent = currentUser.postCount || 0;
+    document.getElementById('joinCount').textContent = currentUser.joinCount || 0;
+    document.getElementById('myPostCount').textContent = (currentUser.postCount || 0) + ' 条';
+    const friendsCountEl = document.getElementById('friendsCount');
+    if (friendsCountEl) friendsCountEl.textContent = (window.friends || []).length || '0';
+
+    const tagBox = document.getElementById('myTags');
+    if (currentUser.tags && currentUser.tags.length > 0) {
+        tagBox.innerHTML = currentUser.tags.map(t =>
+            `<span style="background:#e8f4fd;color:#1890ff;padding:5px 12px;border-radius:15px;font-size:12px;">${t}</span>`
+        ).join('');
+    }
+}
+function startAuthFlow() {
+    if (!currentUser.id) { routeByUserState(); return; }
+    if (!currentUser.nickname) { showPage('profileEditPage'); return; }
+    showPage('authPage');
+}
+function logout() {
+    // 清理当前学号标识，但保留该学号的历史资料（下次用同一学号登录时可恢复）
+    localStorage.removeItem('campusBuddyCurrentStudentId');
+    localStorage.removeItem('campusBuddyUser');
+    currentUser = {
+        id: null, nickname: '', gender: '', tags: [],
+        studentId: '', realName: '', authStatus: 0,
+        postCount: 0, joinCount: 0, creditScore: 100,
+        token: null, submitTime: null
+    };
+    selectedGender = ''; selectedTags = []; uploadMocked = false;
+    showToast('已退出登录');
+    setTimeout(() => routeByUserState(), 500);
+}
+
+// ============ 工具函数 ============
+function maskStudentId(id) {
+    if (!id || id.length <= 4) return id;
+    return id.substring(0, 2) + '****' + id.substring(id.length - 2);
+}
+function formatDateTime(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function formatTime(str) {
+    if (!str) return '';
+    const diff = Math.floor((Date.now() - new Date(str).getTime()) / 60000);
+    if (diff < 5) return '刚刚';
+    if (diff < 60) return diff + '分钟前';
+    if (diff < 1440) return Math.floor(diff/60) + '小时前';
+    return Math.floor(diff/1440) + '天前';
+}
+function formatMeetTime(str) {
+    if (!str) return '待定';
+    const d = new Date(str);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) {
+        return '今天 ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    }
+    return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+
+
+function showHomeFromSide() { showPage('homePage'); }
+
+// ============================================================
+// 我的发布 - 显示用户发布过的搭子
+// ============================================================
+function refreshMyPosts() {
+    const list = document.getElementById('myPostsList');
+    const myPosts = (window.mockPosts || []).filter(p => p.publisherId === currentUser.id);
+    if (!myPosts || myPosts.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📝</div>
+                <p>还没有发布过搭子</p>
+                <p style="font-size:12px;margin-top:5px;">点击下方按钮，去发布第一个吧</p>
+                <button class="primary-btn-sm" onclick="showPublish()">+ 发布新搭子</button>
+            </div>`;
+        return;
+    }
+    list.innerHTML = myPosts.map(post => {
+        const typeClass = getTypeClass(post.type);
+        return `
+        <div class="post-card">
+            <div class="post-header">
+                <div class="avatar">${post.publisherNickname ? post.publisherNickname.charAt(0) : '?'}</div>
+                <div class="user-info">
+                    <div class="nickname">${post.publisherNickname || '匿名'}</div>
+                    <div class="post-meta">${formatTime(post.create_time || post.meet_time)} · ${post.location || ''}</div>
+                </div>
+                <span class="type-tag ${typeClass}">${post.type}</span>
+            </div>
+            <div class="post-content">${post.description}</div>
+            <div class="post-info">
+                <span>🕐 ${formatMeetTime(post.meet_time)}</span>
+                <span class="member-count">👥 ${post.current_members || 1}/${post.max_members}人</span>
+                <button class="primary-btn-sm" style="margin-top:0;padding:6px 14px;background:#fff;color:#ff4d4f;border:1.5px solid #ff4d4f;box-shadow:none;font-size:12px;" onclick="deletePost(${post.id})">🗑 删除</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function deletePost(postId) {
+    if (!confirm('确定要删除这条搭子吗？')) return;
+    if (window.mockPosts) {
+        window.mockPosts = window.mockPosts.filter(p => p.id !== postId);
+    }
+    // 同时删除与该帖子相关的邀约和申请
+    if (window.myInvitations) {
+        window.myInvitations = window.myInvitations.filter(inv => inv.postId !== postId);
+    }
+    if (window.myApplications) {
+        window.myApplications = window.myApplications.filter(a => a.postId !== postId);
+    }
+    currentUser.postCount = (currentUser.postCount || 0) > 0 ? (currentUser.postCount - 1) : 0;
+    saveUserState();
+    savePostsData();
+    showToast('已删除');
+    refreshMyPosts();
+    loadPosts();
+    refreshProfilePage();
+}
+
+// ============================================================
+// 我的申请 - 显示用户申请加入过的搭子（分状态标签页）
+// ============================================================
+let currentApplicationsTab = 'pending';
+function switchApplicationTab(el) {
+    document.querySelectorAll('#applicationTabs .tab-item').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    currentApplicationsTab = el.dataset.tab;
+    refreshMyApplications(currentApplicationsTab);
+}
+
+function refreshMyApplications(tab) {
+    const list = document.getElementById('myApplicationsList');
+    // 只显示当前用户发出的申请（按 applicantId 过滤）
+    const apps = (window.myApplications || []).filter(a => a.applicantId === currentUser.id && a.status === tab);
+    if (!apps || apps.length === 0) {
+        let emptyMsg = '暂无申请记录';
+        if (tab === 'approved') emptyMsg = '没有已通过的申请';
+        if (tab === 'rejected') emptyMsg = '没有被拒绝的申请';
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">${tab === 'approved' ? '✅' : tab === 'rejected' ? '❌' : '📋'}</div>
+                <p>${emptyMsg}</p>
+                <p style="font-size:12px;margin-top:5px;">去广场页看看有哪些感兴趣的搭子</p>
+                <button class="primary-btn-sm" onclick="showPage('homePage')">去广场逛逛</button>
+            </div>`;
+        return;
+    }
+    list.innerHTML = apps.map(app => {
+        const typeClass = getTypeClass(app.type);
+        let statusHtml = '';
+        if (tab === 'pending') statusHtml = '<span class="status-badge pending">等待审核</span>';
+        if (tab === 'approved') statusHtml = '<span class="status-badge approved">已通过</span>';
+        if (tab === 'rejected') statusHtml = '<span class="status-badge rejected">已拒绝</span>';
+        let actionHtml = '';
+        if (tab === 'pending') actionHtml = `<button class="primary-btn-sm" style="margin-top:0;padding:6px 14px;background:#fff;color:#ff4d4f;border:1.5px solid #ff4d4f;box-shadow:none;font-size:12px;" onclick="withdrawApplication(${app.id})">↩ 撤回申请</button>`;
+        if (tab === 'approved') actionHtml = `<button class="primary-btn-sm" style="margin-top:0;padding:6px 14px;background:linear-gradient(135deg,#722ed1,#531dab);" onclick="startChat('${app.publisherId || 'pub'}', '${app.publisherNickname || '发布者'}')">💬 联系发布者</button>`;
+        return `
+        <div class="post-card">
+            <div class="post-header">
+                <div class="avatar">${app.publisherNickname ? app.publisherNickname.charAt(0) : '?'}</div>
+                <div class="user-info">
+                    <div class="nickname">${app.publisherNickname || '匿名'}</div>
+                    <div class="post-meta">${formatTime(app.applyTime)} 申请加入</div>
+                </div>
+                <span class="type-tag ${typeClass}">${app.type}</span>
+            </div>
+            <div class="post-content">${app.description}</div>
+            <div class="post-info">
+                <span>📍 ${app.location || '待定'}</span>
+                ${statusHtml}
+                ${actionHtml}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function withdrawApplication(appId) {
+    if (!confirm('确定要撤回这条申请吗？')) return;
+    if (window.myApplications) {
+        window.myApplications = window.myApplications.filter(a => a.id !== appId);
+    }
+    if (window.myInvitations) {
+        window.myInvitations = window.myInvitations.filter(inv => inv.id !== appId);
+    }
+    currentUser.joinCount = (currentUser.joinCount || 0) > 0 ? (currentUser.joinCount - 1) : 0;
+    saveUserState();
+    savePostsData();
+    showToast('已撤回申请');
+    refreshMyApplications('pending');
+    refreshProfilePage();
+}
+
+// ============================================================
+// 我的邀约 - 显示别人申请加入我发布的搭子
+// ============================================================
+function refreshMyInvitations() {
+    const list = document.getElementById('myInvitationsList');
+    const invs = (window.myInvitations || []).filter(inv => inv.publisherId === currentUser.id);
+    if (!invs || invs.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📅</div>
+                <p>暂无邀约请求</p>
+                <p style="font-size:12px;margin-top:5px;">当有人申请加入你发布的搭子时，会显示在这里</p>
+                <button class="primary-btn-sm" onclick="showPublish()">去发布搭子</button>
+            </div>`;
+        return;
+    }
+    list.innerHTML = invs.map(inv => {
+        let statusTag = '';
+        let actionHtml = '';
+        if (inv.status === 'pending') {
+            statusTag = '<span style="background:#fff7e6;color:#ff9800;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;">待处理</span>';
+            actionHtml = `
+                <button class="primary-btn-sm" style="margin-top:0;padding:8px 18px;background:linear-gradient(135deg,#52c41a,#389e0d);box-shadow:0 2px 10px rgba(82,196,26,0.3);" onclick="respondInvitation(${inv.id}, true)">✓ 同意</button>
+                <button class="primary-btn-sm" style="margin-top:0;padding:8px 18px;background:#fff;color:#ff4d4f;border:1.5px solid #ff4d4f;box-shadow:none;" onclick="respondInvitation(${inv.id}, false)">✕ 拒绝</button>`;
+        } else if (inv.status === 'approved') {
+            statusTag = '<span style="background:#f6ffed;color:#52c41a;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;">已同意</span>';
+            actionHtml = `
+                <button class="primary-btn-sm" style="margin-top:0;padding:8px 18px;background:linear-gradient(135deg,#1677ff,#0958d9);box-shadow:0 2px 10px rgba(22,119,255,0.3);" onclick="addFriend(${inv.applicantId}, '${inv.applicantName}')">👥 加好友</button>
+                <button class="primary-btn-sm" style="margin-top:0;padding:8px 18px;background:linear-gradient(135deg,#722ed1,#531dab);box-shadow:0 2px 10px rgba(114,46,209,0.3);" onclick="startChat(${inv.applicantId}, '${inv.applicantName}')">💬 发消息</button>`;
+        } else {
+            statusTag = '<span style="background:#fff1f0;color:#ff4d4f;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;">已拒绝</span>';
+            actionHtml = '<span style="color:#999;font-size:12px;">已拒绝该申请</span>';
+        }
+        return `
+        <div class="post-card">
+            <div class="post-header">
+                <div class="avatar">${inv.applicantName ? inv.applicantName.charAt(0) : '?'}</div>
+                <div class="user-info">
+                    <div class="nickname">${inv.applicantName || '匿名用户'}</div>
+                    <div class="post-meta">${formatTime(inv.applyTime)} 申请加入 · 你发布的</div>
+                </div>
+                ${statusTag}
+            </div>
+            <div class="post-content">${inv.postTitle || inv.description}</div>
+            <div class="post-info">
+                <span>📍 ${inv.location || '待定'}</span>
+                ${actionHtml}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function respondInvitation(id, accept) {
+    if (!window.myInvitations) return;
+    const inv = window.myInvitations.find(i => i.id === id);
+    if (inv) inv.status = accept ? 'approved' : 'rejected';
+    savePostsData();
+    showToast(accept ? '已同意该用户加入' : '已拒绝该申请');
+    refreshMyInvitations();
+}
+
+// ============================================================
+// 学号认证详情页 - 根据用户当前认证状态显示不同信息
+// ============================================================
+function refreshAuthDetail() {
+    const card = document.getElementById('authStatusCard');
+    const icon = document.getElementById('authStatusIcon');
+    const title = document.getElementById('authStatusTitle');
+    const desc = document.getElementById('authStatusDesc');
+    const actionBtn = document.getElementById('authDetailActionBtn');
+    const realNameVal = document.getElementById('authRealNameValue');
+    const studentIdVal = document.getElementById('authStudentIdValue');
+    const submitTimeVal = document.getElementById('authSubmitTimeValue');
+    const approvedTimeVal = document.getElementById('authApprovedTimeValue');
+
+    card.className = 'auth-status-card';
+
+    if (currentUser.authStatus === 0 || !currentUser.authStatus) {
+        // 未认证
+        icon.textContent = '⚠️';
+        title.textContent = '尚未提交认证';
+        desc.innerHTML = '请准备好您的学号和真实姓名，认证通过后方可发布和加入搭子';
+        actionBtn.style.display = 'block';
+        actionBtn.textContent = '去提交认证';
+        actionBtn.onclick = startAuthFlow;
+        realNameVal.textContent = '—';
+        studentIdVal.textContent = '—';
+        submitTimeVal.textContent = '—';
+        approvedTimeVal.textContent = '—';
+    } else if (currentUser.authStatus === 1) {
+        // 审核中
+        icon.textContent = '⏳';
+        title.textContent = '认证审核中';
+        desc.innerHTML = '您的信息已提交，正在核查学籍<br>通常需要 1-2 分钟';
+        actionBtn.style.display = 'block';
+        actionBtn.textContent = '[演示] 模拟审核通过';
+        actionBtn.onclick = function() { manualReview(); showPage('authDetailPage'); };
+        realNameVal.textContent = currentUser.realName || '—';
+        studentIdVal.textContent = currentUser.studentId ? maskStudentId(currentUser.studentId) : '—';
+        submitTimeVal.textContent = currentUser.submitTime ? formatDateTime(currentUser.submitTime) : '—';
+        approvedTimeVal.textContent = '—';
+    } else if (currentUser.authStatus === 2) {
+        // 已通过
+        card.classList.add('approved');
+        icon.textContent = '✅';
+        title.textContent = '🎉 认证已通过';
+        desc.innerHTML = '恭喜！您已通过学号认证<br>现在可以完整使用所有功能';
+        actionBtn.style.display = 'none';
+        realNameVal.textContent = currentUser.realName || '—';
+        studentIdVal.textContent = currentUser.studentId ? maskStudentId(currentUser.studentId) : '—';
+        submitTimeVal.textContent = currentUser.submitTime ? formatDateTime(currentUser.submitTime) : '—';
+        approvedTimeVal.textContent = formatDateTime(new Date().toISOString());
+    } else if (currentUser.authStatus === 3) {
+        // 被拒绝
+        card.classList.add('rejected');
+        icon.textContent = '❌';
+        title.textContent = '认证未通过';
+        desc.innerHTML = '本平台仅面向<strong>湖南工业大学</strong>在校师生开放<br>请确认学号与姓名是否匹配后重新提交';
+        actionBtn.style.display = 'block';
+        actionBtn.textContent = '重新提交认证';
+        actionBtn.onclick = startAuthFlow;
+        realNameVal.textContent = currentUser.realName || '—';
+        studentIdVal.textContent = currentUser.studentId ? maskStudentId(currentUser.studentId) : '—';
+        submitTimeVal.textContent = currentUser.submitTime ? formatDateTime(currentUser.submitTime) : '—';
+        approvedTimeVal.textContent = '—';
+    }
+}
+
+// ============================================================
+// 设置页 - 显示用户信息，允许编辑
+// ============================================================
+function refreshSettingsPage() {
+    const nickEl = document.getElementById('settingsNickname');
+    const genderEl = document.getElementById('settingsGender');
+    const tagsEl = document.getElementById('settingsTags');
+    const userIdEl = document.getElementById('settingsUserId');
+    const creditEl = document.getElementById('settingsCreditScore');
+
+    if (currentUser.nickname) {
+        nickEl.textContent = currentUser.nickname + ' ›';
+        nickEl.style.color = '#333';
+    }
+    if (currentUser.gender) {
+        genderEl.textContent = (currentUser.gender === 'male' ? '男' : '女') + ' ›';
+        genderEl.style.color = '#333';
+    }
+    if (currentUser.tags && currentUser.tags.length > 0) {
+        tagsEl.textContent = currentUser.tags.join('、') + ' ›';
+        tagsEl.style.color = '#333';
+    }
+    userIdEl.textContent = currentUser.id ? 'ID-' + String(currentUser.id).slice(-6) : '—';
+    creditEl.textContent = (currentUser.creditScore || 100) + '分';
+}
+
+function editNickname() {
+    const newName = prompt('请输入新的昵称（2-12字）', currentUser.nickname || '');
+    if (newName && newName.length >= 2 && newName.length <= 12) {
+        currentUser.nickname = newName;
+        saveUserState();
+        refreshSettingsPage();
+        refreshProfilePage();
+        showToast('昵称已更新');
+    } else if (newName) {
+        showToast('昵称长度不符合要求');
+    }
+}
+
+function editGender() {
+    const g = prompt('请输入性别（男/女）', currentUser.gender === 'male' ? '男' : currentUser.gender === 'female' ? '女' : '');
+    if (g === '男' || g === '女') {
+        currentUser.gender = g === '男' ? 'male' : 'female';
+        saveUserState();
+        refreshSettingsPage();
+        showToast('性别已更新');
+    } else if (g) {
+        showToast('请输入「男」或「女」');
+    }
+}
+
+function editTags() {
+    const t = prompt('请输入兴趣标签，用逗号分隔（如：约饭,运动,自习）', (currentUser.tags || []).join(','));
+    if (t && t.trim()) {
+        currentUser.tags = t.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+        saveUserState();
+        refreshSettingsPage();
+        refreshProfilePage();
+        showToast('标签已更新');
+    }
+}
+
+function editAvatar() {
+    showToast('头像将根据昵称自动生成');
+}
+
+function showAbout() {
+    alert('校园搭子 v1.0\n\n仅面向湖南工业大学在校师生开放\n\n找饭搭、运动搭、学习搭、游戏搭\n让校园生活不再孤单！');
+}
+
+function clearCache() {
+    if (confirm('确定清除所有缓存数据？（将清除登录状态）')) {
+        localStorage.removeItem('campusBuddyUser');
+        currentUser = {
+            id: null, nickname: '', gender: '', tags: [],
+            studentId: '', realName: '', authStatus: 0,
+            postCount: 0, joinCount: 0, creditScore: 100,
+            token: null, submitTime: null
+        };
+        showToast('缓存已清除');
+        setTimeout(() => routeByUserState(), 500);
+    }
+}
+
+function submitPost() {
+    if (currentUser.authStatus !== 2) { showToast('请先完成学号认证后再发布'); return; }
+    const description = document.getElementById('description').value.trim();
+    const location = document.getElementById('location').value.trim();
+    if (!description) { showToast('请输入活动描述'); return; }
+    if (!location) { showToast('请输入活动地点'); return; }
+    const newPost = {
+        id: Date.now(),
+        publisherId: currentUser.id,
+        publisherNickname: currentUser.nickname,
+        type: selectedType, description, location,
+        meet_time: document.getElementById('meetTime').value || new Date().toISOString(),
+        current_members: 1, max_members: selectedMaxMembers,
+        create_time: new Date().toISOString()
+    };
+    if (!window.mockPosts) window.mockPosts = [];
+    window.mockPosts.unshift(newPost);
+    currentUser.postCount = (currentUser.postCount || 0) + 1;
+    saveUserState();
+    savePostsData();
+    document.getElementById('description').value = '';
+    document.getElementById('location').value = '';
+    document.getElementById('meetTime').value = '';
+    document.getElementById('charCount').textContent = '0';
+    showToast('发布成功！');
+    setTimeout(() => { showPage('homePage'); loadPosts(); refreshProfilePage(); }, 900);
+}
+
+function applyPost(postId, btn) {
+    if (currentUser.authStatus !== 2) { showToast('请先完成学号认证后再申请'); return; }
+    if (btn && btn.disabled) return;
+    const post = (window.mockPosts || []).find(p => p.id === postId);
+    if (post && post.publisherId === currentUser.id) { showToast('这是你自己发布的搭子，无需申请'); return; }
+    const now = new Date().toISOString();
+    if (!window.myApplications) window.myApplications = [];
+    if (!window.myInvitations) window.myInvitations = [];
+
+    // 1) 加入「我的申请」—— 记录当前用户作为申请人
+    window.myApplications.unshift({
+        id: Date.now(),
+        applicantId: currentUser.id,
+        applicantName: currentUser.nickname,
+        postId: postId,
+        type: post ? post.type : '约饭',
+        publisherNickname: post ? post.publisherNickname : '匿名',
+        description: post ? post.description : '',
+        location: post ? post.location : '',
+        status: 'pending',
+        applyTime: now
+    });
+
+    // 2) 加入「我的邀约」—— 用帖子的 publisherId 作为归属者，这样发帖人登录后能看到
+    if (post && post.publisherId && post.publisherId !== currentUser.id) {
+        window.myInvitations.unshift({
+            id: Date.now() + 1,
+            publisherId: post.publisherId,
+            applicantId: currentUser.id,
+            applicantName: currentUser.nickname,
+            postId: postId,
+            type: post.type,
+            postTitle: post.description.substring(0, 20) + (post.description.length > 20 ? '...' : ''),
+            description: post.description,
+            location: post.location,
+            status: 'pending',
+            applyTime: now
+        });
+    }
+    currentUser.joinCount = (currentUser.joinCount || 0) + 1;
+    saveUserState();
+    savePostsData();
+    showToast('申请已发送，等待发布者确认');
+    btn.textContent = '已申请';
+    btn.classList.add('applied');
+    btn.disabled = true;
+    refreshProfilePage();
+}
+
+// ============ 好友与消息功能 ============
+function addFriend(userId, userName) {
+    if (!userId || !userName) { showToast('用户信息不正确'); return; }
+    if (!window.friends) window.friends = [];
+    const exists = window.friends.find(f => String(f.id) === String(userId));
+    if (exists) { showToast('已是好友关系'); return; }
+    window.friends.push({
+        id: userId,
+        name: userName,
+        addTime: new Date().toISOString()
+    });
+    savePostsData();
+    showToast('已成功添加好友');
+    refreshMyInvitations();
+}
+
+function deleteFriend(userId) {
+    if (!confirm('确定要删除该好友吗？')) return;
+    if (window.friends) {
+        window.friends = window.friends.filter(f => String(f.id) !== String(userId));
+    }
+    savePostsData();
+    showToast('已删除好友');
+    refreshFriendsPage();
+}
+
+// 当前聊天对象
+let currentChatUser = { id: null, name: null };
+
+// ============ 消息统计工具函数 ============
+// 统计当前用户收到的所有未读消息总数
+function getTotalUnread() {
+    if (!window.messages || !currentUser.id) return 0;
+    const me = String(currentUser.id);
+    return window.messages.filter(m => String(m.toId) === me && m.read === false).length;
+}
+
+// 获取与某个好友的消息统计
+function getFriendMessageStats(friendId) {
+    if (!window.messages || !currentUser.id) return { total: 0, unread: 0, lastMsg: '暂无消息', lastTime: '', isLastFromMe: false };
+    const me = String(currentUser.id);
+    const fid = String(friendId);
+    const chat = window.messages.filter(m =>
+        (String(m.fromId) === me && String(m.toId) === fid) ||
+        (String(m.fromId) === fid && String(m.toId) === me)
+    ).sort((a, b) => new Date(a.time) - new Date(b.time));
+    if (chat.length === 0) return { total: 0, unread: 0, lastMsg: '暂无消息', lastTime: '', isLastFromMe: false };
+    const last = chat[chat.length - 1];
+    const unread = chat.filter(m => String(m.fromId) === fid && m.read === false).length;
+    return {
+        total: chat.length,
+        unread: unread,
+        lastMsg: last.content,
+        lastTime: last.time,
+        isLastFromMe: String(last.fromId) === me
+    };
+}
+
+// 更新底部导航消息角标
+function updateMsgBadge() {
+    const badge = document.getElementById('msgBadge');
+    if (!badge) return;
+    const count = getTotalUnread();
+    if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+// ============ 帖子智能推荐算法 ============
+// 关键词库（用于更精准的相似度匹配）
+const KEYWORD_MAP = {
+    '约饭': ['饭', '食堂', '火锅', '烧烤', '餐', '吃', '拼桌', '聚餐', '美食', '奶茶', '咖啡', '餐厅', '小吃', '外卖', '请客'],
+    '运动': ['球', '篮球', '足球', '羽毛球', '乒乓球', '网球', '跑步', '健身', '游泳', '瑜伽', '骑行', '爬山', '散步', '运动', '体育馆', '操场'],
+    '游戏': ['王者', 'LOL', '英雄联盟', '吃鸡', '和平精英', '原神', 'CS', '开黑', '游戏', '电竞', '手游', '网游', '单机', 'switch', 'ps'],
+    '自习': ['自习', '学习', '图书馆', '复习', '考试', '论文', '作业', '考研', '刷题', '自习室', '读书', '课题', '项目', '编程', 'code']
+};
+
+// 从帖子内容提取关键词
+function extractKeywords(post) {
+    if (!post) return new Set();
+    const text = ((post.description || '') + ' ' + (post.location || '') + ' ' + (post.type || '')).toLowerCase();
+    const keywords = new Set();
+    // 先从关键词库中匹配
+    for (const type in KEYWORD_MAP) {
+        KEYWORD_MAP[type].forEach(kw => {
+            if (text.includes(kw.toLowerCase())) keywords.add(kw);
+        });
+    }
+    // 类型本身作为关键词
+    if (post.type) keywords.add(post.type);
+    // 从描述中提取2-4字的词块（简单分词
+    const simpleWords = (post.description || '').match(/[\u4e00-\u9fa5]{2,4}/g) || [];
+    simpleWords.slice(0, 5).forEach(w => keywords.add(w));
+    return keywords;
+}
+
+// 计算两个帖子的相似度分数（0-100+）
+function calculateSimilarity(postA, postB) {
+    if (!postA || !postB) return 0;
+    let score = 0;
+    let reasons = [];
+
+    // 1. 类型匹配（权重最高
+    if (postA.type === postB.type) {
+        score += 50;
+        reasons.push('同类型');
+    }
+
+    // 2. 关键词匹配
+    const kwsA = extractKeywords(postA);
+    const kwsB = extractKeywords(postB);
+    let matchedKws = [];
+    kwsA.forEach(kw => {
+        if (kwsB.has(kw)) {
+            score += 8;
+            matchedKws.push(kw);
+        }
+    });
+    if (matchedKws.length > 0) reasons.push('关键词:' + matchedKws.slice(0, 3).join(','));
+
+    // 3. 地点匹配
+    const locA = (postA.location || '').trim();
+    const locB = (postB.location || '').trim();
+    if (locA && locB) {
+        if (locA === locB) {
+            score += 25;
+            reasons.push('同地点');
+        } else if (locA.includes(locB) || locB.includes(locA)) {
+            score += 15;
+            reasons.push('地点相近');
+        }
+    }
+
+    // 4. 时间新鲜度（越近的帖子加分
+    const now = new Date();
+    const createTime = postB.create_time ? new Date(postB.create_time) : now;
+    const hoursDiff = (now - createTime) / (1000 * 60 * 60);
+    if (hoursDiff < 24) {
+        score += 15;
+        reasons.push('今日发布');
+    } else if (hoursDiff < 72) {
+        score += 8;
+        reasons.push('3日内');
+    } else if (hoursDiff < 168) {
+        score += 3;
+    }
+
+    // 5. 成员状态（未满员的加分
+    if (postB.current_members < postB.max_members) {
+        score += 10;
+        reasons.push('还可加入');
+    }
+
+    return { score: score, reasons: reasons };
+}
+
+// 获取当前用户的帖子用于推荐匹配
+function getMyPostsForRecommend() {
+    if (!window.mockPosts || !currentUser.id) return [];
+    const me = currentUser.id;
+    return window.mockPosts.filter(p => String(p.publisherId) === String(me));
+}
+
+// 计算帖子推荐列表（基于用户自己的帖子
+function getRecommendedPosts() {
+    const allPosts = window.mockPosts || [];
+    if (!currentUser.id) return [];
+    const me = String(currentUser.id);
+    const myPosts = getMyPostsForRecommend();
+
+    // 如果用户没有自己的帖子，不推荐
+    if (myPosts.length === 0) return [];
+
+    // 过滤出别人的帖子
+    const othersPosts = allPosts.filter(p => String(p.publisherId) !== me);
+
+    // 计算每个帖子与用户所有帖子的最高相似度
+    const scoredPosts = othersPosts.map(post => {
+        let bestScore = 0;
+        let bestReasons = [];
+        let bestMatch = null;
+        myPosts.forEach(myPost => {
+            const result = calculateSimilarity(myPost, post);
+            if (result.score > bestScore) {
+                bestScore = result.score;
+                bestReasons = result.reasons;
+                bestMatch = myPost;
+            }
+        });
+        return {
+            post: post,
+            score: bestScore,
+            reasons: bestReasons,
+            matchedPost: bestMatch
+        };
+    });
+
+    // 按分数排序，过滤掉分数太低的
+    scoredPosts.sort((a, b) => b.score - a.score);
+    return scoredPosts.filter(sp => sp.score >= 20);
+}
+
+// 刷新推荐页面
+function refreshRecommendPage() {
+    const list = document.getElementById('recommendList');
+    const header = document.getElementById('recommendHeader');
+    const summary = document.getElementById('recommendSummary');
+
+    const myPosts = getMyPostsForRecommend();
+    if (myPosts.length === 0) {
+        if (header) header.textContent = '智能推荐';
+        if (summary) summary.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:22px;">📝</span><span>去发布你的第一个搭子，系统将为你智能推荐</span></div>';
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <p>还没有推荐数据</p>
+                <p style="font-size:12px;margin-top:5px;">先去发布一个搭子吧</p>
+                <button class="primary-btn-sm" onclick="showPublish()">+ 发布搭子</button>
+            </div>
+        `;
+        return;
+    }
+
+    const recommended = getRecommendedPosts();
+    if (header) header.textContent = '智能推荐 (' + recommended.length + '条)';
+    if (summary) {
+        summary.innerHTML = `
+            <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:22px;">🎯</span>
+                <span><b>${myPosts.length}</b>个你的帖子 · 匹配到 <b>${recommended.length}</b>条相似搭子</span>
+            </div>
+            <div style="font-size:12px;color:#718096;line-height:1.6;">
+                匹配规则：类型权重50% + 关键词权重25% + 地点权重15% + 时间新鲜度
+            </div>
+        `;
+    }
+
+    if (recommended.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <p>暂时没有高度匹配的搭子</p>
+                <p style="font-size:12px;margin-top:5px;">去广场看看所有搭子吧</p>
+                <button class="primary-btn-sm" onclick="switchNav(document.querySelectorAll('.nav-item')[0],'homePage')">🏠 去广场</button>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = recommended.map(item => {
+        const post = item.post;
+        const typeClass = getTypeClass(post.type);
+        const isFull = post.current_members >= post.max_members;
+        const reasonText = item.reasons.length > 0 ? item.reasons.join(' · ') : '相似内容';
+        const matchedDesc = item.matchedPost ? ('基于你的：「' + (item.matchedPost.description || '').slice(0, 10) + '...」') : '';
+        return `
+        <div class="post-card">
+            <div class="post-header">
+                <div class="avatar">${post.publisherNickname ? post.publisherNickname.charAt(0) : '?'}</div>
+                <div class="user-info">
+                    <div class="nickname">${post.publisherNickname || '匿名用户'}</div>
+                    <div class="post-time">${post.create_time ? new Date(post.create_time).toLocaleString('zh-CN') : '刚刚'}</div>
+                </div>
+                <span class="type-tag ${typeClass}">${post.type || '其他'}</span>
+            </div>
+            <div style="padding:0 0 10px 0;font-size:14px;line-height:1.6;color:#2d3748;">
+                ${post.description}
+            </div>
+            <div class="post-meta">
+                <span>📍 ${post.location || '待定'}</span>
+                <span>👥 ${post.current_members}/${post.max_members}人</span>
+                <span>🕐 ${post.meet_time ? new Date(post.meet_time).toLocaleString('zh-CN', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '待定'}</span>
+            </div>
+            <div style="margin:8px 0;padding:8px 12px;background:linear-gradient(135deg,#fff8e7,#fff5eb);border-radius:8px;font-size:12px;color:#7c6232;">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                    <span>✨</span><b>相似度 ${item.score}分</b> · ${reasonText}
+                </div>
+                ${matchedDesc ? '<div style="font-size:11px;color:#8b7355;margin-top:2px;">' + matchedDesc + '</div>' : ''}
+            </div>
+            <div style="display:flex;gap:10px;margin-top:12px;">
+                <button class="apply-btn ${isFull ? 'applied' : ''}" ${isFull ? 'disabled' : ''} onclick="applyPost(${post.id})">
+                    ${isFull ? '已满员' : '申请加入'}
+                </button>
+                <button class="apply-btn" onclick="viewPostDetail(${post.id})" style="background:#f7fafc;color:#4a5568;">查看详情</button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+function viewPostDetail(postId) {
+    const post = (window.mockPosts || []).find(p => p.id === postId);
+    if (!post) { showToast('帖子不存在'); return; }
+    showToast('帖子详情：' + (post.description || '').slice(0, 20) + '...');
+}
+
+function startChat(userId, userName) {
+    if (!userId || !userName) { showToast('无法发起聊天'); return; }
+    currentChatUser = { id: userId, name: userName };
+    showPage('chatPage');
+    setTimeout(() => refreshChatPage(), 50);
+}
+
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input ? input.value.trim() : '';
+    if (!text) { showToast('请输入消息内容'); return; }
+    if (!currentChatUser || !currentChatUser.id) { showToast('未选择聊天对象'); return; }
+    if (!window.messages) window.messages = [];
+    window.messages.push({
+        id: Date.now(),
+        fromId: currentUser.id,
+        fromName: currentUser.nickname,
+        toId: currentChatUser.id,
+        toName: currentChatUser.name,
+        content: text,
+        time: new Date().toISOString(),
+        read: false
+    });
+    savePostsData();
+    input.value = '';
+    refreshChatPage();
+    updateMsgBadge();
+}
+
+function refreshFriendsPage() {
+    const list = document.getElementById('friendsList');
+    const header = document.getElementById('friendsHeader');
+    const totalUnread = getTotalUnread();
+    if (header) header.textContent = '消息 (' + (window.friends ? window.friends.length : 0) + '位好友, ' + totalUnread + ' 条未读)';
+    const friends = window.friends || [];
+    if (friends.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <p>还没有好友</p>
+                <p style="font-size:12px;margin-top:5px;">在「我的邀约」同意申请后可以添加好友</p>
+            </div>`;
+        updateMsgBadge();
+        return;
+    }
+    // 按最后一条消息时间排序（有消息的好友排前面）
+    const friendsWithStats = friends.map(f => {
+        const stats = getFriendMessageStats(f.id);
+        return { ...f, ...stats };
+    }).sort((a, b) => {
+        // 有未读消息的排最前
+        if (a.unread !== b.unread) return b.unread - a.unread;
+        // 再按最后消息时间排序
+        if (a.lastTime && b.lastTime) return new Date(b.lastTime) - new Date(a.lastTime);
+        if (a.lastTime) return -1;
+        if (b.lastTime) return 1;
+        return 0;
+    });
+    list.innerHTML = friendsWithStats.map(f => {
+        const lastMsgPreview = f.lastMsg ? f.lastMsg.substring(0, 20) + (f.lastMsg.length > 20 ? '...' : '') : '暂无消息';
+        const timeDisplay = f.lastTime ? formatTime(f.lastTime) : '';
+        const prefix = f.isLastFromMe ? '我: ' : '';
+        return `
+        <div class="post-card" onclick="startChat('${f.id}', '${f.name}')" style="cursor:pointer;">
+            <div class="post-header">
+                <div style="position:relative;">
+                    <div class="avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-weight:700;">${f.name.charAt(0)}</div>
+                </div>
+                <div class="user-info" style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div class="nickname">${f.name}</div>
+                        <span class="friend-msg-time">${timeDisplay}</span>
+                    </div>
+                    <div class="friend-last-msg">${prefix}${lastMsgPreview} · 共 ${f.total} 条</div>
+                </div>
+                ${f.unread > 0 ? `<span class="friend-unread-badge">${f.unread}</span>` : ''}
+            </div>
+            <div class="post-info">
+                <button class="primary-btn-sm" style="margin-top:0;padding:8px 18px;background:linear-gradient(135deg,#722ed1,#531dab);" onclick="event.stopPropagation();startChat('${f.id}', '${f.name}')">💬 发消息</button>
+                <button class="primary-btn-sm" style="margin-top:0;padding:8px 18px;background:#fff;color:#ff4d4f;border:1.5px solid #ff4d4f;box-shadow:none;" onclick="event.stopPropagation();deleteFriend('${f.id}')">🗑 删除好友</button>
+            </div>
+        </div>
+    `;}).join('');
+    updateMsgBadge();
+}
+
+function refreshChatPage() {
+    const title = document.getElementById('chatTitle');
+    const list = document.getElementById('chatMessages');
+    if (title && currentChatUser) title.textContent = '💬 ' + currentChatUser.name;
+    if (!window.messages) window.messages = [];
+    const me = currentUser.id;
+    const other = currentChatUser ? currentChatUser.id : null;
+    // 关键：标记该好友发给我的所有消息为已读
+    let hasUnread = false;
+    window.messages.forEach(m => {
+        if (String(m.fromId) === String(other) && String(m.toId) === String(me) && m.read === false) {
+            m.read = true;
+            hasUnread = true;
+        }
+    });
+    if (hasUnread) savePostsData();
+    // 筛选与当前好友的对话
+    const chat = window.messages.filter(m =>
+        (String(m.fromId) === String(me) && String(m.toId) === String(other)) ||
+        (String(m.fromId) === String(other) && String(m.toId) === String(me))
+    ).sort((a, b) => new Date(a.time) - new Date(b.time));
+    if (chat.length === 0) {
+        list.innerHTML = `<div style="text-align:center;color:#999;padding:40px 15px;font-size:14px;">还没有消息，发送第一条消息吧！</div>`;
+        updateMsgBadge();
+        return;
+    }
+    list.innerHTML = chat.map(m => {
+        const isMe = String(m.fromId) === String(me);
+        const bubbleColor = isMe
+            ? 'linear-gradient(135deg,#667eea,#764ba2);color:#fff;'
+            : '#fff;color:#333;border:1px solid #e8e8e8;';
+        const floatSide = isMe ? 'margin-left:auto;' : 'margin-right:auto;';
+        const avatarName = isMe ? (currentUser.nickname || '我') : currentChatUser.name;
+        return `
+            <div style="display:flex;margin-bottom:16px;${floatSide}max-width:80%;flex-direction:${isMe ? 'row-reverse' : 'row'};">
+                <div style="width:36px;height:36px;border-radius:50%;background:${isMe ? 'linear-gradient(135deg,#667eea,#764ba2)' : '#e8e8e8'};color:${isMe ? '#fff' : '#666'};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">${avatarName.charAt(0)}</div>
+                <div style="padding:0 10px;">
+                    <div style="font-size:11px;color:#999;margin-bottom:4px;${isMe ? 'text-align:right;' : ''}">${formatTime(m.time)}</div>
+                    <div style="padding:10px 14px;border-radius:12px;background:${bubbleColor};word-break:break-word;line-height:1.5;">${m.content}</div>
+                </div>
+            </div>`;
+    }).join('');
+    updateMsgBadge();
+}
+</script>
+</body>
+</html>
